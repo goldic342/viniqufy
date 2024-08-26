@@ -1,6 +1,6 @@
 # Frontend for Viniqufy
 
-This is the frontend part of the **Viniqufy** application built with **React** and **Chakra UI*. The frontend is designed to interact with the backend API, which is built using **FastAPI**.
+This is the frontend part of the **Viniqufy** application built with **React** and **Chakra UI**. The frontend is designed to interact with the backend API, which is built using **FastAPI\*\*.
 
 ## Getting Started
 
