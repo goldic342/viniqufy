@@ -13,7 +13,14 @@ class SpotifyService:
     def __init__(self, client_id: str, client_secret: str):
         self.client_id = client_id
         self.client_secret = client_secret
+        self.session = None
+
+    async def __aenter__(self):
         self.session = ClientSession()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.session.close()
 
     async def get_uniqueness(self, playlist: SpotifyPlaylistCreate):
         # Get playlist info > get tracks info > calculate uniqueness
