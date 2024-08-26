@@ -57,9 +57,21 @@ class SpotifyService:
         }
 
     async def __get(self, sub_url: str):
-        pass
+        """
+        Makes a GET request to the Spotify API.
+        :param sub_url: Url that follows afters https://api.spotify.com/v1
+        :return: response json
+        """
+
+        if not sub_url.startswith('/'):
+            raise ValueError('sub_url must start with /')
+
+        headers = await self.__make_auth_headers()
+        response = await self.session.get(f'{self.API_URL}{sub_url}', headers=headers)
+        return await response.json()
 
     async def __playlist_info(self, playlist_id: str):
+        pass
 
     async def __track_info(self, track_id: str):
         pass
