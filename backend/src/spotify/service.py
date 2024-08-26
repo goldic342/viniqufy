@@ -6,6 +6,7 @@ from schemas import SpotifyPlaylistCreate
 
 
 class SpotifyService:
+    # TODO: Add token caching, so all instances of class have the same token
     API_URL = 'https://api.spotify.com/v1'
     access_token = None
     access_token_creation = None
