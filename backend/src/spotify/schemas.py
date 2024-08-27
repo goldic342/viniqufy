@@ -20,10 +20,22 @@ class SpotifyArtist(Artist):
     popularity: int = Field(ge=0, le=100)
 
 
-class SpotifyTrack(Track):
+class SpotifyTrackBase(Track):
     spotify_id: str
     duration: int
     popularity: int = Field(ge=0, le=100)
 
     # Override default type
     artists: list[SpotifyArtist]
+
+
+class SpotifyTrackAnalysis(BaseModel):
+    tempo: float
+    key: int
+    mode: int = Field(ge=0, le=1)
+    loudness: float
+    duration: float
+
+
+class SpotifyTrack(SpotifyTrackBase):
+    analysis: SpotifyTrackAnalysis
