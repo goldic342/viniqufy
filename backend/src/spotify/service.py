@@ -1,3 +1,4 @@
+import asyncio
 import math
 from collections import Counter
 from datetime import datetime, timedelta
@@ -5,7 +6,7 @@ from statistics import mean
 
 from aiohttp import ClientSession
 
-from schemas import SpotifyPlaylistCreate, SpotifyTrack, SpotifyArtist, SpotifyTrackBase
+from schemas import SpotifyPlaylistCreate, SpotifyTrack, SpotifyArtist, SpotifyTrackBase, SpotifyTrackAnalysis
 
 
 class SpotifyService:
@@ -27,8 +28,20 @@ class SpotifyService:
         await self.session.close()
 
     async def get_uniqueness(self, playlist: SpotifyPlaylistCreate):
-        # Get playlist info > get tracks info > calculate uniqueness
-        pass
+        # TODO: Add saving to database: playlist info
+        tracks_base = await self.__playlist_tracks(playlist.spotify_id)
+
+        tracks = []
+        artists = []
+
+        for track in tracks_base:
+            tracks.append(SpotifyTrack(**track.dict(), analysis=await self.__track_audio_analysis(track.spotify_id)))
+            artists.extend(track.artists)
+
+        print(tracks)
+        print(artists)
+
+        return await self.__calculate_uniqueness(tracks, artists)
 
     async def __set_access_token(self) -> None:
         """
@@ -81,25 +94,32 @@ class SpotifyService:
         response = await self.session.get(f'{self.API_URL}{sub_url}', headers=headers)
         return await response.json()
 
-    @staticmethod
-    def __parse_tracks(tracks: dict) -> list[SpotifyTrackBase]:
+    async def __parse_tracks(self, tracks: dict) -> list[SpotifyTrackBase]:
         """
-        Parse tracks json from response to pydantic schema.
+        Parse tracks json, loads additional data and then convert to pydantic schema.
         :param tracks: Raw tracks json (dict)
         :return: List of tracks as pydantic model
         """
         result = []
 
         for track in tracks:
+            track = track['track']
+            artists = []
+
+            for artist in track['artists']:
+                artist_info = await self.__artist_info(artist['id'])
+                artists.append(SpotifyArtist(
+                    name=artist_info['name'],
+                    spotify_id=artist_info['id'],
+                    genres=artist_info['genres'],
+                    popularity=artist_info['popularity'],
+                ))
+
             result.append(SpotifyTrackBase(
                 name=track['name'],
                 spotify_id=track['id'],
-                duration=track['duration_ms'],
                 popularity=track['popularity'],
-                artists=[
-                    SpotifyArtist(name=artist['name'], spotify_id=artist['id'], genres=artist['genres'],
-                                  popularity=artist['popularity']) for
-                    artist in track['artists']],
+                artists=artists,
             ))
 
         return result
@@ -110,7 +130,7 @@ class SpotifyService:
 
         while True:
             response = await self.__get(next_url)
-            tracks.extend(self.__parse_tracks(response['items']))
+            tracks.extend(await self.__parse_tracks(response['items']))
 
             if response['next']:
                 next_url = response['next']
@@ -126,14 +146,15 @@ class SpotifyService:
         return await self.__get(f'/tracks/{track_id}')
 
     async def __track_audio_analysis(self, track_id: str):
-        return await self.__get(f'/audio-analysis/{track_id}')
+        response = await self.__get(f'/audio-analysis/{track_id}')
+        return SpotifyTrackAnalysis(**response['track'])
 
     async def __artist_info(self, artist_id: str):
         return await self.__get(f'/artists/{artist_id}')
 
     @staticmethod
     async def __calculate_uniqueness(tracks: list[SpotifyTrack], artists: list[SpotifyArtist]):
-        def calculate_diversity(values):
+        def calculate_diversity(values) -> float:
             """
             Calculates diversity for numerical parameters using coefficient of variation.
 
@@ -165,7 +186,7 @@ class SpotifyService:
         # 1. Calculating basic params
         p = mean(track.popularity for track in tracks)  # Avg popularity of tracks
         a = mean(artist.popularity for artist in artists)  # Avg popularity of artists
-        d = len(artists) - len(set(artists))  # Count of unique artists
+        d = len(set(artist.spotify_id for artist in artists))  # Count of unique artists
         t = len(tracks)  # Total count of tracks
 
         # 2. Calculating musical parameters
@@ -185,11 +206,14 @@ class SpotifyService:
 
         # 3. Calculating collaboration diversity
         max_artists_per_track = max(len(track.artists) for track in tracks)
-        tracks_with_collabs = [len(track.artists) - 1 for track in tracks if len(track.artists) > 1]
-        avg_collabs_per_track = mean(tracks_with_collabs)
+        collab_diversity = 1  # If no collaborations, diversity is 1
 
-        collab_diversity = (avg_collabs_per_track / (max_artists_per_track - 1)) * (
-                len(tracks_with_collabs) / len(tracks))
+        if max_artists_per_track > 1:
+            tracks_with_collabs = [len(track.artists) - 1 for track in tracks if len(track.artists) > 1]
+            avg_collabs_per_track = mean(tracks_with_collabs)
+
+            collab_diversity = (avg_collabs_per_track / (max_artists_per_track - 1)) * (
+                    len(tracks_with_collabs) / len(tracks))
 
         # Calculating the final uniqueness
         uniqueness = (

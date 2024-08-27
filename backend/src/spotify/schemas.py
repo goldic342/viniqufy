@@ -22,7 +22,6 @@ class SpotifyArtist(Artist):
 
 class SpotifyTrackBase(Track):
     spotify_id: str
-    duration: int
     popularity: int = Field(ge=0, le=100)
 
     # Override default type
