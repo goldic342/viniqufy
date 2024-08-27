@@ -27,3 +27,11 @@ class SpotifyTrack(Track):
 
     # Override default type
     artists: list[SpotifyArtist]
+
+
+class SpotifyTrackAnalysis(BaseModel):
+    tempo: float
+    key: int
+    mode: int = Field(ge=0, le=1)
+    loudness: float
+    duration: float
