@@ -1,8 +1,11 @@
+import math
+from collections import Counter
 from datetime import datetime, timedelta
+from statistics import mean
 
 from aiohttp import ClientSession
 
-from schemas import SpotifyPlaylistCreate
+from schemas import SpotifyPlaylistCreate, SpotifyTrack, SpotifyArtist
 
 
 class SpotifyService:
@@ -90,5 +93,78 @@ class SpotifyService:
     async def __artist_info(self, artist_id: str):
         return await self.__get(f'/artists/{artist_id}')
 
-    async def __calculate_uniqueness(self):
-        pass
+    @staticmethod
+    async def __calculate_uniqueness(tracks: list[SpotifyTrack], artists: list[SpotifyArtist]):
+        def calculate_diversity(values):
+            """
+            Calculates diversity for numerical parameters using coefficient of variation.
+
+            :param values: List of numerical values
+            :return: Normalized diversity value from 0 to 1
+            """
+            mean_values = mean(values)  # Mean value
+            # Standard deviation
+            std_dev = math.sqrt(sum((x - mean_values) ** 2 for x in values) / len(values))
+            cv = std_dev / abs(mean_values) if mean_values != 0 else 0  # Coefficient of variation
+            return cv / (cv + 1)  # Normalize the result
+
+        def calculate_shannon_diversity(values):
+            """
+            Calculates Shannon entropy for categorical parameters.
+
+            :param values: List of categorical values
+            :return: Normalized Shannon entropy from 0 to 1
+            """
+            counter = Counter(values)  # Counting frequency of each value
+            total = sum(counter.values())  # Total count of values
+            # Calculating probabilities for each unique value
+            probabilities = [count / total for count in counter.values()]
+            # Calculating Shannon entropy
+            h = -sum(p * math.log(p) for p in probabilities if p > 0)
+            # Normalizing by maximum possible diversity
+            return h / math.log(len(counter))
+
+        # 1. Calculating basic params
+        p = mean(track.popularity for track in tracks)  # Avg popularity of tracks
+        a = mean(artist.popularity for artist in artists)  # Avg popularity of artists
+        d = len(artists) - len(set(artists))  # Count of unique artists
+        t = len(tracks)  # Total count of tracks
+
+        # 2. Calculating musical parameters
+        tempos = [track.analysis.tempo for track in tracks]
+        keys = [track.analysis.key for track in tracks]
+        modes = [track.analysis.mode for track in tracks]
+        loudness = [track.analysis.loudness for track in tracks]
+        durations = [track.analysis.duration for track in tracks]
+
+        tempo_diversity = calculate_diversity(tempos)
+        key_diversity = calculate_shannon_diversity(keys)
+        loudness_diversity = calculate_diversity(loudness)
+        duration_diversity = calculate_diversity(durations)
+
+        # For the mode (major/minor), we use a simple ratio
+        mode_diversity = min(modes.count(0), modes.count(1)) / max(modes.count(0), modes.count(1))
+
+        # 3. Calculating collaboration diversity
+        max_artists_per_track = max(len(track.artists) for track in tracks)
+        tracks_with_collabs = [len(track.artists) - 1 for track in tracks if len(track.artists) > 1]
+        avg_collabs_per_track = mean(tracks_with_collabs)
+
+        collab_diversity = (avg_collabs_per_track / (max_artists_per_track - 1)) * (
+                len(tracks_with_collabs) / len(tracks))
+
+        # Calculating the final uniqueness
+        uniqueness = (
+                (1 - p / 100) *  # Track popularity factor
+                (1 - a / 100) *  # Artist popularity factor
+                (1 - d / t) *  # Artist diversity factor
+                (1 - tempo_diversity) *  # Tempo diversity factor
+                (1 - key_diversity) *  # Key diversity factor
+                (1 - mode_diversity) *  # Mode diversity factor
+                (1 - loudness_diversity) *  # Loudness diversity factor
+                (1 - duration_diversity) *  # Duration diversity factor
+                collab_diversity *  # Collaboration diversity factor
+                100  # Convert to percents
+        )
+
+        return uniqueness
