@@ -79,10 +79,16 @@ class SpotifyService:
         return await response.json()
 
     async def __playlist_info(self, playlist_id: str):
-        pass
+        return await self.__get(f'/playlists/{playlist_id}')
 
     async def __track_info(self, track_id: str):
-        pass
+        return await self.__get(f'/tracks/{track_id}')
+
+    async def __track_audio_analysis(self, track_id: str):
+        return await self.__get(f'/audio-analysis/{track_id}')
+
+    async def __artist_info(self, artist_id: str):
+        return await self.__get(f'/artists/{artist_id}')
 
     async def __calculate_uniqueness(self):
         pass
