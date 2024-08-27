@@ -5,7 +5,7 @@ from statistics import mean
 
 from aiohttp import ClientSession
 
-from schemas import SpotifyPlaylistCreate, SpotifyTrack, SpotifyArtist
+from schemas import SpotifyPlaylistCreate, SpotifyTrack, SpotifyArtist, SpotifyTrackBase
 
 
 class SpotifyService:
@@ -80,6 +80,44 @@ class SpotifyService:
         headers = await self.__make_auth_headers()
         response = await self.session.get(f'{self.API_URL}{sub_url}', headers=headers)
         return await response.json()
+
+    @staticmethod
+    def __parse_tracks(tracks: dict) -> list[SpotifyTrackBase]:
+        """
+        Parse tracks json from response to pydantic schema.
+        :param tracks: Raw tracks json (dict)
+        :return: List of tracks as pydantic model
+        """
+        result = []
+
+        for track in tracks:
+            result.append(SpotifyTrackBase(
+                name=track['name'],
+                spotify_id=track['id'],
+                duration=track['duration_ms'],
+                popularity=track['popularity'],
+                artists=[
+                    SpotifyArtist(name=artist['name'], spotify_id=artist['id'], genres=artist['genres'],
+                                  popularity=artist['popularity']) for
+                    artist in track['artists']],
+            ))
+
+        return result
+
+    async def __playlist_tracks(self, playlist_id: str, limit: int = 30) -> list[SpotifyTrackBase]:
+        tracks = []
+        next_url = f'/playlists/{playlist_id}/tracks?limit={limit}'
+
+        while True:
+            response = await self.__get(next_url)
+            tracks.extend(self.__parse_tracks(response['items']))
+
+            if response['next']:
+                next_url = response['next']
+            else:
+                break
+
+        return tracks
 
     async def __playlist_info(self, playlist_id: str):
         return await self.__get(f'/playlists/{playlist_id}')
