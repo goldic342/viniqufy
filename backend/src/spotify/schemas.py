@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel, Field
 
 from src.models import Playlist, Track, Artist
@@ -16,16 +18,8 @@ class SpotifyPlaylistCreate(BaseModel):
 
 class SpotifyArtist(Artist):
     spotify_id: str
-    genres: list[str]
+    genres: List[str]
     popularity: int = Field(ge=0, le=100)
-
-
-class SpotifyTrackBase(Track):
-    spotify_id: str
-    popularity: int = Field(ge=0, le=100)
-
-    # Override default type
-    artists: list[SpotifyArtist]
 
 
 class SpotifyTrackAnalysis(BaseModel):
@@ -34,7 +28,14 @@ class SpotifyTrackAnalysis(BaseModel):
     mode: int = Field(ge=0, le=1)
     loudness: float
     duration: float
+    energy: float = Field(ge=0, le=1)
+    valence: float = Field(ge=0, le=1)
+    danceability: float = Field(ge=0, le=1)
 
 
-class SpotifyTrack(SpotifyTrackBase):
+class SpotifyTrack(Track):
+    spotify_id: str
+    popularity: int = Field(ge=0, le=100)
+    artists: List[SpotifyArtist]  # override default property
     analysis: SpotifyTrackAnalysis
+    release_year: int
