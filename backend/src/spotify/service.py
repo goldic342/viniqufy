@@ -1,4 +1,6 @@
+from copy import deepcopy
 from datetime import datetime, timedelta
+from itertools import chain
 
 import numpy as np
 from aiohttp import ClientSession
@@ -25,21 +27,12 @@ class SpotifyService:
     async def __aexit__(self, exc_type, exc, tb):
         await self.session.close()
 
-    async def get_uniqueness(self, playlist: SpotifyPlaylistCreate):
+    async def get_uniqueness(self, playlist: SpotifyPlaylistCreate, silent: bool = True) -> float:
         # TODO: Add saving to database: playlist info
-        tracks_base = await self.__playlist_tracks(playlist.spotify_id)
+        tracks = await self.__playlist_tracks(playlist.spotify_id)
+        artists = list(chain.from_iterable(track.artists for track in tracks))
 
-        tracks = []
-        artists = []
-
-        for track in tracks_base:
-            tracks.append(SpotifyTrack(**track.dict(), analysis=await self.__track_audio_analysis(track.spotify_id)))
-            artists.extend(track.artists)
-
-        print(tracks)
-        print(artists)
-
-        return await self.__calculate_uniqueness(tracks, artists)
+        return await self.__calculate_uniqueness(tracks, artists, silent=silent)
 
     async def __set_access_token(self) -> None:
         """
@@ -92,48 +85,82 @@ class SpotifyService:
         response = await self.session.get(f'{self.API_URL}{sub_url}', headers=headers)
         return await response.json()
 
-    async def __parse_tracks(self, tracks: dict) -> list[SpotifyTrackBase]:
+    async def __parse_tracks(self,
+                             tracks: dict,
+                             parsed_artists: list[SpotifyArtist],
+                             parsed_audio_analysis: list[SpotifyTrackAnalysis]) -> \
+            tuple[list[SpotifyTrack], list[SpotifyArtist], list[SpotifyTrackAnalysis]]:
         """
-        Parse tracks json, loads additional data and then convert to pydantic schema.
+        Parse tracks json, loads additional data such as artist info, audio analysis and then convert to pydantic schema.
         :param tracks: Raw tracks json (dict)
-        :return: List of tracks as pydantic model
+        :param parsed_artists: List of already parsed SpotifyArtist instances
+        :param parsed_audio_analysis: List of already parsed SpotifyTrackAnalysis instances
+        :return: List of tracks as pydantic model, modified artist list and audio analysis list
         """
-        result = []
+        result: list[SpotifyTrack] = []
 
-        for track in tracks:
-            track = track['track']
+        # To prevent mutations
+        parsed_artists_copy = deepcopy(parsed_artists)
+        parsed_audio_analysis_copy = deepcopy(parsed_audio_analysis)
+
+        for track_data in tracks:
+            track = track_data['track']
             artists = []
 
             for artist in track['artists']:
+                existing_artist = next((a for a in parsed_artists_copy if a.spotify_id == artist['id']), None)
+                if existing_artist:
+                    artists.append(existing_artist)
+                    continue
+
                 artist_info = await self.__artist_info(artist['id'])
-                artists.append(SpotifyArtist(
+                artist_schema = SpotifyArtist(
                     name=artist_info['name'],
                     spotify_id=artist_info['id'],
                     genres=artist_info['genres'],
                     popularity=artist_info['popularity'],
-                ))
+                )
+                artists.append(artist_schema)
+                parsed_artists_copy.append(artist_schema)
 
-            result.append(SpotifyTrackBase(
+            audio_analysis = next(
+                (analysis for analysis in parsed_audio_analysis_copy if analysis.spotify_id == track['id']), None)
+            if not audio_analysis:
+                audio_analysis = await self.__track_audio_analysis(track['id'])
+                parsed_audio_analysis_copy.append(audio_analysis)
+
+            result.append(SpotifyTrack(
                 name=track['name'],
                 spotify_id=track['id'],
                 popularity=track['popularity'],
+                release_year=track['album']['release_date'].split('-')[0],
                 artists=artists,
+                analysis=audio_analysis
             ))
 
-        return result
+        return result, parsed_artists_copy, parsed_audio_analysis_copy
 
-    async def __playlist_tracks(self, playlist_id: str, limit: int = 30) -> list[SpotifyTrackBase]:
+    async def __playlist_tracks(self, playlist_id: str, limit: int = 30) -> list[SpotifyTrack]:
         tracks = []
-        next_url = f'/playlists/{playlist_id}/tracks?limit={limit}'
+        current_url = f'/playlists/{playlist_id}/tracks?limit={limit}'
 
-        while True:
-            response = await self.__get(next_url)
-            tracks.extend(await self.__parse_tracks(response['items']))
+        artists = []
+        audio_analysis = []
 
-            if response['next']:
-                next_url = response['next'].split(self.API_URL)[1]
-            else:
-                break
+        while current_url:
+            response = await self.__get(current_url)
+
+            parsed_tracks, artists, audio_analysis = await self.__parse_tracks(
+                response['items'],
+                artists,
+                audio_analysis
+            )
+
+            tracks.extend(parsed_tracks)
+
+            current_url = response.get('next')
+            if current_url:
+                current_url = current_url.split(self.API_URL)[1]
 
         return tracks
 
@@ -144,8 +171,18 @@ class SpotifyService:
         return await self.__get(f'/tracks/{track_id}')
 
     async def __track_audio_analysis(self, track_id: str):
-        response = await self.__get(f'/audio-analysis/{track_id}')
-        return SpotifyTrackAnalysis(**response['track'])
+        response = await self.__get(f'/audio-features/{track_id}')
+        return SpotifyTrackAnalysis(
+            spotify_id=track_id,
+            duration=response['duration_ms'],
+            loudness=response['loudness'],
+            danceability=response['danceability'],
+            energy=response['energy'],
+            key=response['key'],
+            mode=response['mode'],
+            tempo=response['tempo'],
+            valence=response['valence']
+        )
 
     async def __artist_info(self, artist_id: str):
         return await self.__get(f'/artists/{artist_id}')
@@ -155,11 +192,9 @@ class SpotifyService:
         """
         Calculating the uniqueness of data based on Shannon index, Simpson index, and coefficient of variation.
 
-        Parameters:
-        data (array-like): Input data (list, array or pandas series).
+        :param data (array-like): Input data (list, array or pandas series).
 
-        Returns:
-        float: Data uniqueness value (from 0 to 1).
+        :return: Data uniqueness value (from 0 to 1).
         """
 
         if len(values) == 0:
@@ -196,7 +231,8 @@ class SpotifyService:
 
         return uniqueness_score
 
-    async def __calculate_uniqueness(self, tracks: list[SpotifyTrack], artists: list[SpotifyArtist]):
+    async def __calculate_uniqueness(self, tracks: list[SpotifyTrack], artists: list[SpotifyArtist],
+                                     silent: bool = True):
         """
         Calculates the uniqueness of a playlist based on the popularity of tracks, artists, variety of genres,
         variety of tracks audio params
@@ -252,7 +288,10 @@ class SpotifyService:
         """
 
         # Weights for each component
-        w1, w2, w3, w4, w5, w6 = 0.15, 0.15, 0.2, 0.15, 0.1, 0.1
+        w1, w2, w3, w4, w5, w6 = 0.3, 0.2, 0.1, 0.2, 0.1, 0.1
+
+        if sum([w1, w2, w3, w4, w5, w6]) != 1:
+            raise ValueError('Sum of weights must be equal to 1')
 
         # 1. Popularity (P)
         p_tracks = np.mean([track.popularity for track in tracks])
@@ -286,7 +325,7 @@ class SpotifyService:
         ])
 
         # 4. Genre Diversity (G)
-        genres = [genre for artist in artists for genre in artist.genres]
+        genres = list(chain.from_iterable(artist.genres for artist in artists))
         unique_genres = len(set(genres))
         genre_counts = np.array([genres.count(genre) for genre in set(genres)])
         H = -np.sum((genre_counts / len(genres)) * np.log(genre_counts / len(genres)))
@@ -294,7 +333,7 @@ class SpotifyService:
 
         # 5. Temporal Diversity (T)
         years = [track.release_year for track in tracks]
-        current_year = max(years)  # Assuming the latest year in the playlist is the current year
+        current_year = datetime.now().year
         T = 1 - (max(years) - min(years)) / (current_year - min(years) + 1)  # Adding 1 to avoid division by zero
 
         # 6. Era Diversity (E)
@@ -305,6 +344,32 @@ class SpotifyService:
         # This would require data about playlist occurrences for each track, which we don't have
         # R = 0.5
         # w7 = 0.15
+
+        if not silent:
+            print('Tracks and artists:', len(tracks), len(artists))
+            print(f'{[track.name for track in tracks]}')
+            print(f'{[artist.name for artist in artists]}')
+
+            print('\n')
+
+            print(f'Popularity: {P}\n'
+                  f'Artist Diversity: {A}\n'
+                  f'Musical Diversity: {M}\n'
+                  f'Genre Diversity: {G}\n'
+                  f'Temporal Diversity: {T}\n'
+                  f'Era Diversity: {E}\n')
+
+            print('Musical Diversity components:')
+            print(
+                f'{tempos=}\n'
+                f'{keys=}\n'
+                f'{loudness=}\n'
+                f'{durations=}\n'
+                f'{modes=}\n'
+                f'{energies=}\n'
+                f'{valences=}\n'
+                f'{danceabilities=}')
+            print('Years, genres:', years, genres)
 
         # Calculate final uniqueness score
         U = (w1 * P + w2 * A + w3 * M + w4 * G + w5 * T + w6 * E) / (w1 + w2 + w3 + w4 + w5 + w6)
