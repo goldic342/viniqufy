@@ -13,3 +13,7 @@ htmlcov
 .cache
 .venv
 venv/
+
+# .env files
+*.env
+!*env.example
