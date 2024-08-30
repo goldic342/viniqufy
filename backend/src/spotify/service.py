@@ -6,6 +6,7 @@ import numpy as np
 from aiohttp import ClientSession
 from scipy.stats import entropy
 
+from config import WEIGHTS
 from schemas import SpotifyPlaylistCreate, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis
 
 
@@ -27,12 +28,11 @@ class SpotifyService:
     async def __aexit__(self, exc_type, exc, tb):
         await self.session.close()
 
-    async def get_uniqueness(self, playlist: SpotifyPlaylistCreate, silent: bool = True) -> float:
-        # TODO: Add saving to database: playlist info
+    async def get_uniqueness(self, playlist: SpotifyPlaylistCreate) -> float:
         tracks = await self.__playlist_tracks(playlist.spotify_id)
         artists = list(chain.from_iterable(track.artists for track in tracks))
 
-        return await self.__calculate_uniqueness(tracks, artists, silent=silent)
+        return await self.__calculate_uniqueness(tracks, artists, WEIGHTS)
 
     async def __set_access_token(self) -> None:
         """
@@ -232,7 +232,7 @@ class SpotifyService:
         return uniqueness_score
 
     async def __calculate_uniqueness(self, tracks: list[SpotifyTrack], artists: list[SpotifyArtist],
-                                     silent: bool = True):
+                                     weights: dict[str, int]) -> float:
         """
         Calculates the uniqueness of a playlist based on the popularity of tracks, artists, variety of genres,
         variety of tracks audio params
@@ -284,13 +284,24 @@ class SpotifyService:
 
         :param tracks: List of SpotifyTrack objects
         :param artists: List of SpotifyArtist objects
+        :param weights: Dictionary of weights
         :return: Uniqueness score between 0 and 1
         """
 
-        # Weights for each component
-        w1, w2, w3, w4, w5, w6 = 0.3, 0.2, 0.1, 0.2, 0.1, 0.1
+        # Weights
+        w1 = weights.get('popularity')
+        w2 = weights.get('artist_diversity')
+        w3 = weights.get('musical_diversity')
+        w4 = weights.get('genre_diversity')
+        w5 = weights.get('temporal_diversity')
+        w6 = weights.get('era_diversity')
+        w_list = [w1, w2, w3, w4, w5, w6]
 
-        if sum([w1, w2, w3, w4, w5, w6]) != 1:
+        # Weights validation
+        if any(param is None for param in w_list):
+            raise ValueError('Not all weights are set.')
+
+        if sum(w_list) != 1:
             raise ValueError('Sum of weights must be equal to 1')
 
         # 1. Popularity (P)
@@ -339,37 +350,6 @@ class SpotifyService:
         # 6. Era Diversity (E)
         eras = [year // 10 for year in years]  # Defining eras as decades
         E = len(set(eras)) / ((current_year // 10) - (min(years) // 10) + 1)
-
-        # 7. Rarity (R)
-        # This would require data about playlist occurrences for each track, which we don't have
-        # R = 0.5
-        # w7 = 0.15
-
-        if not silent:
-            print('Tracks and artists:', len(tracks), len(artists))
-            print(f'{[track.name for track in tracks]}')
-            print(f'{[artist.name for artist in artists]}')
-
-            print('\n')
-
-            print(f'Popularity: {P}\n'
-                  f'Artist Diversity: {A}\n'
-                  f'Musical Diversity: {M}\n'
-                  f'Genre Diversity: {G}\n'
-                  f'Temporal Diversity: {T}\n'
-                  f'Era Diversity: {E}\n')
-
-            print('Musical Diversity components:')
-            print(
-                f'{tempos=}\n'
-                f'{keys=}\n'
-                f'{loudness=}\n'
-                f'{durations=}\n'
-                f'{modes=}\n'
-                f'{energies=}\n'
-                f'{valences=}\n'
-                f'{danceabilities=}')
-            print('Years, genres:', years, genres)
 
         # Calculate final uniqueness score
         U = (w1 * P + w2 * A + w3 * M + w4 * G + w5 * T + w6 * E) / (w1 + w2 + w3 + w4 + w5 + w6)
