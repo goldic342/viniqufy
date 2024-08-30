@@ -7,3 +7,5 @@ WEIGHTS = {
     'temporal_diversity': 0.1,
     'era_diversity': 0.1
 }
+
+RATE_LIMIT_WAIT = 5

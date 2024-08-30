@@ -1,3 +1,4 @@
+import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
 from itertools import chain
@@ -6,7 +7,7 @@ import numpy as np
 from aiohttp import ClientSession
 from scipy.stats import entropy
 
-from config import WEIGHTS
+from config import WEIGHTS, RATE_LIMIT_WAIT
 from schemas import SpotifyPlaylistCreate, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis
 
 
@@ -19,7 +20,6 @@ class SpotifyService:
     def __init__(self, client_id: str, client_secret: str):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.session = None
 
     async def __aenter__(self):
         self.session = ClientSession()
@@ -83,6 +83,10 @@ class SpotifyService:
 
         headers = await self.__make_auth_headers()
         response = await self.session.get(f'{self.API_URL}{sub_url}', headers=headers)
+
+        if response.status == 429:
+            await asyncio.sleep(RATE_LIMIT_WAIT)
+
         return await response.json()
 
     async def __parse_tracks(self,
