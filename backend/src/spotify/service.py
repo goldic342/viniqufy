@@ -7,7 +7,7 @@ import numpy as np
 from aiohttp import ClientSession
 from scipy.stats import entropy
 
-from config import WEIGHTS, RATE_LIMIT_WAIT
+from config import settings
 from schemas import SpotifyPlaylistStart, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis
 
 
@@ -32,7 +32,7 @@ class SpotifyService:
         tracks = await self.__playlist_tracks(playlist.spotify_id)
         artists = list(chain.from_iterable(track.artists for track in tracks))
 
-        return await self.__calculate_uniqueness(tracks, artists, WEIGHTS)
+        return await self.__calculate_uniqueness(tracks, artists, settings.weights)
 
     async def __set_access_token(self) -> None:
         """
@@ -85,7 +85,7 @@ class SpotifyService:
         response = await self.session.get(f'{self.API_URL}{sub_url}', headers=headers)
 
         if response.status == 429:
-            await asyncio.sleep(RATE_LIMIT_WAIT)
+            await asyncio.sleep(settings.rate_limit_wait)
             return await self.__get(sub_url)
 
         return await response.json()
