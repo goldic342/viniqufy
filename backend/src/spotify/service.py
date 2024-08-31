@@ -34,7 +34,7 @@ class SpotifyService:
         tracks = await self.__playlist_tracks(playlist.spotify_id)
         artists = list(chain.from_iterable(track.artists for track in tracks))
 
-        return await self.__calculate_uniqueness(tracks, artists, spotify_settings.weights)
+        return self.__calculate_uniqueness(tracks, artists, spotify_settings.weights)
 
     async def __set_access_token(self) -> None:
         """
@@ -238,8 +238,8 @@ class SpotifyService:
 
         return uniqueness_score
 
-    async def __calculate_uniqueness(self, tracks: list[SpotifyTrack], artists: list[SpotifyArtist],
-                                     weights: dict[str, int]) -> float:
+    def __calculate_uniqueness(self, tracks: list[SpotifyTrack], artists: list[SpotifyArtist],
+                               weights: dict[str, int]) -> float:
         """
         Calculates the uniqueness of a playlist based on the popularity of tracks, artists, variety of genres,
         variety of tracks audio params
