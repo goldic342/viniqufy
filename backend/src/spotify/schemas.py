@@ -6,11 +6,11 @@ from src.models import Playlist, Track, Artist
 # TODO: find way to avoid code duplication
 class SpotifyPlaylist(Playlist):
     spotify_id: str
+    image_url: str
     description: str
-    followers: int
 
 
-class SpotifyPlaylistCreate(BaseModel):
+class SpotifyPlaylistStart(BaseModel):
     spotify_id: str
 
 

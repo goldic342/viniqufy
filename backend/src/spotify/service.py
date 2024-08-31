@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 from scipy.stats import entropy
 
 from config import WEIGHTS, RATE_LIMIT_WAIT
-from schemas import SpotifyPlaylistCreate, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis
+from schemas import SpotifyPlaylistStart, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis
 
 
 class SpotifyService:
@@ -28,7 +28,7 @@ class SpotifyService:
     async def __aexit__(self, exc_type, exc, tb):
         await self.session.close()
 
-    async def get_uniqueness(self, playlist: SpotifyPlaylistCreate) -> float:
+    async def get_uniqueness(self, playlist: SpotifyPlaylistStart) -> float:
         tracks = await self.__playlist_tracks(playlist.spotify_id)
         artists = list(chain.from_iterable(track.artists for track in tracks))
 
