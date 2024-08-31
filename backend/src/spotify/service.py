@@ -86,6 +86,7 @@ class SpotifyService:
 
         if response.status == 429:
             await asyncio.sleep(RATE_LIMIT_WAIT)
+            return await self.__get(sub_url)
 
         return await response.json()
 
@@ -95,7 +96,7 @@ class SpotifyService:
                              parsed_audio_analysis: list[SpotifyTrackAnalysis]) -> \
             tuple[list[SpotifyTrack], list[SpotifyArtist], list[SpotifyTrackAnalysis]]:
         """
-        Parse tracks json, loads additional data such as artist info, audio analysis and then convert to pydantic schema.
+        Parse tracks json, loads additional data such as artist info, audio analysis and then convert to pydantic schema
         :param tracks: Raw tracks json (dict)
         :param parsed_artists: List of already parsed SpotifyArtist instances
         :param parsed_audio_analysis: List of already parsed SpotifyTrackAnalysis instances
