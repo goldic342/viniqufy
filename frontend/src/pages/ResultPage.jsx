@@ -6,10 +6,15 @@ import { analysisPhases } from "../data";
 
 const ResultPage = () => {
   const [analysisValue, setAnalysisValue] = useState(0.0);
+  const [textColor, setTextColor] = useState("white");
+  const [phrase, setPhrase] = useState("");
+
   const [getAnalysis, isLoading, error] = useFetching(async () => {
     const service = new AnalysisService();
     const analysis = await service.getSpotifyAnalysis("1mh7TCBAYggsNrvrPFQYXb");
     setAnalysisValue(analysis * 100);
+
+    applyRandomStyleAndPhrase(analysisValue);
   });
 
   useEffect(() => {
@@ -18,8 +23,9 @@ const ResultPage = () => {
 
   const applyRandomStyleAndPhrase = (analysisValue) => {
     const matchedPhase = analysisPhases.find((item) => analysisValue <= item.max);
-    return matchedPhase.phrases[Math.floor(Math.random() * matchedPhase.phrases.length)];
-};
+    setPhrase(matchedPhase.phrases[Math.floor(Math.random() * matchedPhase.phrases.length)]);
+    setTextColor(matchedPhase.color);
+  };
 
   return (
     <Container maxW={"4xl"} h={"100vh"}>
@@ -38,8 +44,8 @@ const ResultPage = () => {
           </>
         ) : (
           <>
-            <Heading>{analysisValue.toFixed(1)}</Heading>
-            <Text>{applyRandomStyleAndPhrase(analysisValue)}</Text>
+            <Heading color={textColor}>{analysisValue.toFixed(1)}</Heading>
+            <Text>{phrase}</Text>
           </>
         )}
       </Flex>
