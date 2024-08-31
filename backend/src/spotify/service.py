@@ -7,8 +7,9 @@ import numpy as np
 from aiohttp import ClientSession
 from scipy.stats import entropy
 
-from config import spotify_settings
-from schemas import SpotifyPlaylistStart, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis
+from src.config import settings
+from src.spotify.config import spotify_settings
+from src.spotify.schemas import SpotifyPlaylistStart, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis
 
 
 class SpotifyService:
@@ -17,7 +18,8 @@ class SpotifyService:
     access_token = None
     access_token_creation = None
 
-    def __init__(self, client_id: str, client_secret: str):
+    def __init__(self, client_id: str = settings.SPOTIFY_CLIENT_ID,
+                 client_secret: str = settings.SPOTIFY_CLIENT_SECRET):
         self.client_id = client_id
         self.client_secret = client_secret
 
