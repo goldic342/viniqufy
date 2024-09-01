@@ -3,40 +3,41 @@ import axios from "axios";
 export default class AnalysisService {
   apiBaseUrl = "http://localhost:8000";
 
-  async #getSpotifyAnalysisStatus(taskId) {
+  async getAnalysisStatus(taskId) {
     const response = await axios.get(`${this.apiBaseUrl}/spotify/analysis_status`, {
       params: { task_id: taskId },
     });
     return response.data;
   }
 
-  async #fetchSpotifyAnalysis(taskId) {
+  async fetchAnalysis(taskId) {
     const response = await axios.get(`${this.apiBaseUrl}/spotify/analysis_result`, {
       params: { task_id: taskId },
     });
     return response.data;
   }
 
-  async getSpotifyAnalysis(spotifyId) {
+  async startAnalysis(spotifyId) {
     const response = await axios.post(`${this.apiBaseUrl}/spotify/analysis`, {
       spotify_id: spotifyId,
     });
+    return response.data;
+  }
 
-    const taskId = response.data.task_id;
+  async pingAnalysisStatus(taskId) {
     return new Promise((resolve, reject) => {
       const intervalId = setInterval(async () => {
-        const task_status = await this.#getSpotifyAnalysisStatus(taskId).catch((e) => {
-          clearInterval(intervalId);
-          return reject(e); // Stopping function
-        });
+        try {
+          const taskStatus = await this.getAnalysisStatus(taskId);
 
-        if (task_status && task_status.status === "completed") {
-          clearInterval(intervalId);
-          const analysis = await this.#fetchSpotifyAnalysis(taskId).catch((e) => reject(e));
-
-          if (analysis) {
-            resolve(analysis.result);
+          // If task is completed, then resolve
+          if (taskStatus && taskStatus.status === "completed") {
+            clearInterval(intervalId);
+            resolve(taskId);
           }
+        } catch (error) {
+          clearInterval(intervalId);
+          reject(error);
         }
       }, 1500);
     });
