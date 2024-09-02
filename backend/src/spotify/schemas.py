@@ -1,6 +1,8 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
-from src.models import Playlist, Track, Artist
+from src.models import Playlist, Track, Artist, Task, TaskInitialization
 
 
 # TODO: find way to avoid code duplication
@@ -38,3 +40,11 @@ class SpotifyTrack(Track):
     artists: list[SpotifyArtist]  # override default property
     analysis: SpotifyTrackAnalysis
     release_year: int
+
+
+class SpotifyTask(Task):
+    result: Optional[float] = None
+
+
+class SpotifyTaskInitialization(TaskInitialization):
+    info: SpotifyPlaylist

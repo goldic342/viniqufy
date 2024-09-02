@@ -9,7 +9,7 @@ from scipy.stats import entropy
 
 from src.config import settings
 from src.spotify.config import spotify_settings
-from src.spotify.schemas import SpotifyPlaylistStart, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis
+from src.spotify.schemas import SpotifyPlaylistStart, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis, SpotifyPlaylist
 
 
 class SpotifyService:
@@ -171,8 +171,17 @@ class SpotifyService:
 
         return tracks
 
-    async def __playlist_info(self, playlist_id: str):
-        return await self.__get(f'/playlists/{playlist_id}')
+    async def playlist_info(self, playlist_id: str):
+        playlist_info = await self.__get(f'/playlists/{playlist_id}')
+
+        return SpotifyPlaylist(
+            name=playlist_info['name'],
+            spotify_id=playlist_info['id'],
+            description=playlist_info['description'],
+            tracks_count=playlist_info['tracks']['total'],
+            image_url=playlist_info['images'][0]['url'],
+            owner=playlist_info['owner']['display_name']
+        )
 
     async def __track_info(self, track_id: str):
         return await self.__get(f'/tracks/{track_id}')
