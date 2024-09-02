@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
+from src.models import TaskStatusOutput
 from src.spotify.schemas import SpotifyPlaylistStart, SpotifyTask, SpotifyTaskInitialization
 from src.spotify.service import SpotifyService
 from src.spotify.utils import validate_spotify_id
@@ -56,11 +57,24 @@ async def start_analysis(playlist: SpotifyPlaylistStart, background_tasks: Backg
     return SpotifyTaskInitialization(task_id=task.task_id, info=playlist_info, status=task.status)
 
 
-@router.get('/analysis-status', response_model=SpotifyTask)
+@router.get('/analysis-status', response_model=TaskStatusOutput)
 async def get_analysis_status(task_id: UUID):
     task = get_task(task_id)
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+
+    return TaskStatusOutput(task_id=task.task_id, status=task.status)
+
+
+@router.get('/analysis-result', response_model=SpotifyTask)
+async def get_analysis_result(task_id: UUID):
+    task = get_task(task_id)
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if task.status != "completed":
+        raise HTTPException(status_code=400, detail="Task not completed")
 
     return task

@@ -34,3 +34,12 @@ class TaskInitialization(Task):
     Use this class when you need to provide supplementary information during task initialization
     """
     info: Any | None
+
+
+class TaskStatusOutput(BaseModel):
+    """
+    Represents a task status response
+    Use this if you need to show only task status, without any additional data
+    """
+    task_id: UUID
+    status: Literal["created", "in_progress", "completed"]
