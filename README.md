@@ -7,7 +7,6 @@ Viniqufy is a web application that allows users to determine how unique their pl
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
-- [Usage](#usage)
 - [Future Changes](#future-changes)
 - [License](#license)
 
@@ -71,12 +70,6 @@ To set up the project locally, follow these steps:
      ```
 
 6. **Open your browser** and navigate to `http://localhost:5173`.
-
-## Usage
-
-1. Sign in with your Spotify account to allow Viniqufy to access your playlists.
-2. Select a playlist you want to analyze.
-3. Click the "Analyze" button to see how unique your playlist is compared to others.
 
 ## Future Changes
 
