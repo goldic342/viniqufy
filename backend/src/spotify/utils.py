@@ -1,3 +1,5 @@
+import base64
+import os
 from string import digits, ascii_letters
 
 
@@ -17,3 +19,8 @@ def validate_spotify_id(spotify_id: str) -> bool:
             return False
 
     return True
+
+
+def base64_id() -> str:
+    random_bytes = os.urandom(16)
+    return base64.urlsafe_b64encode(random_bytes).decode('utf-8').rstrip('=')
