@@ -10,10 +10,10 @@ const AnalysisLoadingPage = () => {
   const [startData, setStartData] = useState({ taskId: null, playlistInfo: false });
   const { taskId, playlistInfo } = startData;
 
-  const [getAnalysisStatus, isAnalysisLoading] = useFetching(async () => {
+  const [getAnalysisStatus, isAnalysisLoaded] = useFetching(async () => {
     const service = new AnalysisService();
     await service.pingAnalysisStatus(taskId);
-  });
+  }, true);
 
   const [startAnalysis] = useFetching(async () => {
     const service = new AnalysisService();
@@ -43,14 +43,14 @@ const AnalysisLoadingPage = () => {
             </Center>
           </SkeletonText>
           <Center>
-            {isAnalysisLoading ? (
-              <>
-                <Spinner size="md" color="purple.500" speed="0.65s" />
-              </>
-            ) : (
+            {isAnalysisLoaded ? (
               <ChakraLink as={ReactRouterLink} to={`/analysis/${taskId}`} size="xl">
                 Check analysis
               </ChakraLink>
+            ) : (
+              <>
+                <Spinner size="md" color="purple.500" speed="0.65s" />
+              </>
             )}
           </Center>
         </Stack>
