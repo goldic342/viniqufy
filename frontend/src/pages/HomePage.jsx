@@ -13,6 +13,7 @@ import "@fontsource/montserrat/500.css";
 import { useState } from "react";
 import { musicServices } from "../data";
 import { useNavigate } from "react-router-dom";
+import parseUrl from "parse-url";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -20,17 +21,23 @@ const HomePage = () => {
   const [urlInvalid, setUrlInvalid] = useState(false);
 
   const validateUrl = (passedUrl) => {
-    let urlValid = false;
+    let parsedUrl;
+    try {
+      parsedUrl = parseUrl(passedUrl);
+    } catch {
+      return false;
+    }
 
-    if (!passedUrl) return urlValid;
+    const service = musicServices.filter((service) => service.domain === parsedUrl.resource)[0];
+    const paths = parsedUrl.pathname.split("/").slice(1);
 
-    musicServices.forEach((service) => {
-      if (passedUrl.includes(service.playlistUrl)) {
-        urlValid = [service, passedUrl.split(service.playlistUrl, 2)[1]];
-      }
-    });
-
-    return urlValid[1];
+    if (!service) return false;
+    if (paths.length !== 2) return false;
+    if (paths[0] !== service.urlPath) return false;
+    
+    const base62Id = paths[1];
+    const base62Regex = /^[A-Za-z0-9]+$/;
+    return base62Regex.test(base62Id) ? base62Id : false;
   };
 
   const handleClick = () => {
@@ -62,6 +69,7 @@ const HomePage = () => {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             isInvalid={urlInvalid}
+            required
           />
           <InputRightElement>
             <Button size={"lg"} onClick={handleClick}>

@@ -2,8 +2,8 @@
 export const musicServices = [
   {
     name: "Spotify",
-    playlistUrl: "https://open.spotify.com/playlist/",
-    dataKey: "sptfy",
+    domain: "open.spotify.com",
+    urlPath: "playlist",
     color: "#1ED760",
   },
   // Soundcloud and yandex music will be supported later
