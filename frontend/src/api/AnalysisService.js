@@ -4,14 +4,14 @@ export default class AnalysisService {
   apiBaseUrl = "http://localhost:8000";
 
   async getAnalysisStatus(taskId) {
-    const response = await axios.get(`${this.apiBaseUrl}/spotify/analysis_status`, {
+    const response = await axios.get(`${this.apiBaseUrl}/spotify/analysis-status`, {
       params: { task_id: taskId },
     });
     return response.data;
   }
 
   async fetchAnalysis(taskId) {
-    const response = await axios.get(`${this.apiBaseUrl}/spotify/analysis_result`, {
+    const response = await axios.get(`${this.apiBaseUrl}/spotify/analysis-result`, {
       params: { task_id: taskId },
     });
     return response.data;
