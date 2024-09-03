@@ -14,7 +14,6 @@ Viniqufy is a web application that allows users to determine how unique their pl
 ## Features
 
 - **Playlist Analysis**: Analyze any playlist to determine its uniqueness based on various metrics.
-- **User-Friendly Interface**: Simple and intuitive interface built with React and Chakra UI.
 - **Real-Time Results**: Get instant feedback on your playlist's uniqueness.
 - **Secure Backend**: FastAPI-powered backend for reliable and secure performance.
 
@@ -84,6 +83,7 @@ To set up the project locally, follow these steps:
 Here are some planned features and improvements for future releases:
 
 - **Caching**: Implement caching to reduce loading times and improve performance.
+- **Beautiful UI**: Add a beautiful and intuitive user interface
 - **Admin Panel**: Add an admin panel to view user data and manage the application.
 - **Multiple Playlist Comparison**: Compare the uniqueness of multiple playlists at once.
 - **Enhanced Analytics**: Provide deeper insights with more detailed metrics and visualizations.
