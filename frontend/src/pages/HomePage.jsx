@@ -12,8 +12,10 @@ import {
 import "@fontsource/montserrat/500.css";
 import { useState } from "react";
 import { musicServices } from "../data";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const [url, setUrl] = useState("");
   const [urlInvalid, setUrlInvalid] = useState(false);
 
@@ -28,17 +30,17 @@ const HomePage = () => {
       }
     });
 
-    return urlValid;
+    return urlValid[1];
   };
 
   const handleClick = () => {
-    // Redirect to result page with get params
-
     const playlistId = validateUrl(url);
     if (!playlistId) {
       setUrlInvalid(true);
       return;
     }
+
+    navigate(`/analysis-loading/${playlistId}`);
   };
 
   return (
