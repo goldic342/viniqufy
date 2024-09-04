@@ -6,7 +6,7 @@ import { FaGithub } from "react-icons/fa";
 
 const Header = () => {
   return (
-    <Box as="header" p={3}>
+    <Box as="header" p={3} px={5}>
       <Flex minW={"max-content"} align={"center"}>
         <Logo />
         <Spacer />
