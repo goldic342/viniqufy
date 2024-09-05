@@ -10,7 +10,7 @@ const Header = () => {
         <Logo />
         <Spacer />
         <ChakraLink as={ReactRouterLink} to={"https://github.com/goldic342/viniqufy"}>
-          <Button colorScheme={"blue"} bg={"blue.400"} align={"inherit"} rightIcon={<Icon as={FaGithub}  />}>
+          <Button align={"inherit"} rightIcon={<Icon as={FaGithub}  />}>
             GitHub
           </Button>
         </ChakraLink>
