@@ -2,21 +2,28 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AnalysisPage from "./pages/AnalysisPage";
 import AnalysisLoadingPage from "./pages/AnalysisLoadingPage";
-import { analysisLoader} from "./api/analysisLoaders";
+import { analysisLoader } from "./api/analysisLoaders";
+import Layout from "./components/Layout/Layout";
 
 const router = createBrowserRouter([
   {
+    element: <Layout />,
     path: "/",
-    element: <HomePage />,
-  },
-  {
-    path: "/analysis-loading/:playlistId",
-    element: <AnalysisLoadingPage />,
-  },
-  {
-    path: "/analysis/:taskId",
-    element: <AnalysisPage />,
-    loader: analysisLoader,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: "/analysis-loading/:playlistId",
+        element: <AnalysisLoadingPage />,
+      },
+      {
+        path: "/analysis/:taskId",
+        element: <AnalysisPage />,
+        loader: analysisLoader,
+      },
+    ],
   },
 ]);
 
