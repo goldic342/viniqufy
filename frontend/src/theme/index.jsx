@@ -18,13 +18,19 @@ const components = {
     baseStyle: {
       color: "gray.600",
     },
+
+    variants: {
+      primary: {
+        bgGradient: gradients.reverse,
+        bgClip: "text",
+      },
+    },
   },
   Heading: {
     variants: {
       primary: {
         bgGradient: gradients.reverse,
         bgClip: "text",
-        fontWeight: "extrabold",
       },
       bold: {
         color: "gray.900",
