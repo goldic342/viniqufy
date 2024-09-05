@@ -23,9 +23,11 @@ const components = {
       primary: {
         bgGradient: gradients.primary,
         bgClip: "text",
+        fontWeight: "extrabold",
       },
       bold: {
         color: "gray.900",
+        fontWeight: "extrabold",
       },
     },
 
@@ -40,7 +42,6 @@ const components = {
         color: "white",
         borderRadius: "lg",
         transition: "0.3s all ease-in-out",
-
         _hover: {
           filter: "contrast(1.25)",
         },
