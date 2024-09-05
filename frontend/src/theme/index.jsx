@@ -4,7 +4,8 @@ import "@fontsource/inter";
 // Most styles copied from https://www.uifoundations.com/
 
 const gradients = {
-  primary: "linear(to-tr, blue.400, cyan.400)",
+  primary: "linear(10deg, blue.400, cyan.400)",
+  reverse: "linear(40deg, cyan.400, blue.400)",
 };
 
 const fonts = {
@@ -21,7 +22,7 @@ const components = {
   Heading: {
     variants: {
       primary: {
-        bgGradient: gradients.primary,
+        bgGradient: gradients.reverse,
         bgClip: "text",
         fontWeight: "extrabold",
       },
