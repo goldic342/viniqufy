@@ -6,6 +6,7 @@ import "@fontsource/inter";
 const gradients = {
   primary: "linear(10deg, blue.400, cyan.400)",
   reverse: "linear(40deg, cyan.400, blue.400)",
+  secondary: "linear(185deg, yellow.400, orange.400)",
 };
 
 const fonts = {
@@ -48,7 +49,8 @@ const components = {
         bgGradient: gradients.primary,
         color: "white",
         borderRadius: "lg",
-        transition: "0.3s all ease-in-out",
+        transition: "0.3s filter ease-in-out",
+
         _hover: {
           filter: "contrast(1.25)",
         },
@@ -57,7 +59,23 @@ const components = {
           bg: "blue.700",
         },
       },
+
+      secondary: {
+        bgGradient: gradients.secondary,
+        color: "white",
+        borderRadius: "lg",
+        transition: "0.3s filter ease-in-out",
+
+        _hover: {
+          filter: "contrast(1.25)",
+        },
+
+        _active: {
+          bg: "orange.700",
+        },
+      },
     },
+
     defaultProps: {
       variant: "primary",
     },
