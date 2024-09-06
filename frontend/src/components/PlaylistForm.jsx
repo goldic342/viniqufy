@@ -1,4 +1,4 @@
-import { Input, Button } from "@chakra-ui/react";
+import { Input, Button, HStack } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
 import { object, string } from "yup";
 import { musicServices } from "../data";
@@ -64,17 +64,24 @@ const PlaylistForm = () => {
     >
       {() => (
         <Form>
-          <Field name="playlistUrl">
-            {({ field, form }) => (
-              <Input
-                {...field}
-                placeholder="Spotify playlist link"
-                type="url"
-                isInvalid={form.errors.playlistUrl && form.touched.playlistUrl}
-              />
-            )}
-          </Field>
-          <Button type="submit">Submit</Button>
+          <HStack spacing={4} bg="gray.50" p={2} borderRadius={"lg"}>
+            <Field name="playlistUrl">
+              {({ field, form }) => (
+                <Input
+                  {...field}
+                  placeholder="Spotify playlist..."
+                  outline={"2px solid transparent"}
+                  bg={"white"}
+                  size={"lg"}
+                  type="url"
+                  isInvalid={form.errors.playlistUrl && form.touched.playlistUrl}
+                />
+              )}
+            </Field>
+            <Button type="submit" px={9} variant={"secondary"} size={"lg"}>
+              Analyze now
+            </Button>
+          </HStack>
         </Form>
       )}
     </Formik>
