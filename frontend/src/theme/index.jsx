@@ -9,6 +9,10 @@ const gradients = {
   secondary: "linear(185deg, yellow.400, orange.400)",
 };
 
+const transitions = {
+  base: "0.3s background ease-in-out, 0.3s filter ease-in-out",
+};
+
 const fonts = {
   heading: `'Inter', sans-serif`,
   body: `'Inter', sans-serif`,
@@ -49,7 +53,7 @@ const components = {
         bgGradient: gradients.primary,
         color: "white",
         borderRadius: "lg",
-        transition: "0.3s filter ease-in-out",
+        transition: transitions.base,
 
         _hover: {
           filter: "contrast(1.25)",
@@ -64,7 +68,7 @@ const components = {
         bgGradient: gradients.secondary,
         color: "white",
         borderRadius: "lg",
-        transition: "0.3s filter ease-in-out",
+        transition: transitions.base,
 
         _hover: {
           filter: "contrast(1.25)",
