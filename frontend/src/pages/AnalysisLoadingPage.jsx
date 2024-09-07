@@ -1,7 +1,7 @@
 import { Link as ReactRouterLink, useParams } from "react-router-dom";
 import { Container, Flex, Spinner, Heading, Image, Stack, Center, Skeleton, SkeletonText } from "@chakra-ui/react";
 import { Link as ChakraLink } from "@chakra-ui/react";
-import { useFetching } from "../hooks/useFteching";
+import { useFetching } from "../hooks/useFetching";
 import AnalysisService from "./../api/AnalysisService";
 import { useEffect, useState } from "react";
 
