@@ -1,7 +1,7 @@
-import { Box, Flex, Link as ChakraLink, Spacer, Button, Icon } from "@chakra-ui/react";
-import { Link as ReactRouterLink } from "react-router-dom";
+import { Box, Flex, Spacer, Button, Icon } from "@chakra-ui/react";
 import Logo from "./Logo";
 import { FaGithub } from "react-icons/fa";
+import ChakraRouterLink from "../ChakraRouterLink";
 
 const Header = () => {
   return (
@@ -9,11 +9,11 @@ const Header = () => {
       <Flex minW={"max-content"} align={"center"}>
         <Logo />
         <Spacer />
-        <ChakraLink as={ReactRouterLink} to={"https://github.com/goldic342/viniqufy"}>
-          <Button align={"inherit"} rightIcon={<Icon as={FaGithub}  />}>
+        <ChakraRouterLink href={"https://github.com/goldic342/viniqufy"}>
+          <Button align={"inherit"} rightIcon={<Icon as={FaGithub} />}>
             GitHub
           </Button>
-        </ChakraLink>
+        </ChakraRouterLink>
       </Flex>
     </Box>
   );

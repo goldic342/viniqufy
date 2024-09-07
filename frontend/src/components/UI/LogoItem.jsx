@@ -1,10 +1,10 @@
-import { Box, Link, Image } from "@chakra-ui/react";
+import { Box, Image } from "@chakra-ui/react";
 import PropTypes from "prop-types";
-import { Link as ReactRouterLink } from "react-router-dom";
+import ChakraRouterLink from "../ChakraRouterLink";
 
 const LogoItem = ({ src, href, alt }) => {
   return (
-    <Link to={href} as={ReactRouterLink} isExternal>
+    <ChakraRouterLink href={href}>
       <Box as="span" display="inline-block" maxWidth="200px" height="40px">
         <Image
           src={src}
@@ -17,7 +17,7 @@ const LogoItem = ({ src, href, alt }) => {
           _hover={{ filter: "grayscale(0%)", opacity: 0.7 }}
         />
       </Box>
-    </Link>
+    </ChakraRouterLink>
   );
 };
 
