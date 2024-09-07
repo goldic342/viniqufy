@@ -74,7 +74,7 @@ const PlaylistForm = () => {
                   bg={"white"}
                   size={"lg"}
                   type="url"
-                  isInvalid={form.errors.playlistUrl && form.touched.playlistUrl}
+                  isInvalid={form.errors.playlistUrl && form.touched.playlistUrl && field.value !== ""}
                 />
               )}
             </Field>
