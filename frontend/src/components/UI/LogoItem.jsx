@@ -4,8 +4,8 @@ import { Link as ReactRouterLink } from "react-router-dom";
 
 const LogoItem = ({ src, href, alt }) => {
   return (
-    <Link to={href} as={ReactRouterLink}>
-      <Box as="span" display="inline-block" height="40px" overflow="hidden">
+    <Link to={href} as={ReactRouterLink} isExternal>
+      <Box as="span" display="inline-block" maxWidth="200px" height="40px">
         <Image
           src={src}
           alt={alt}
