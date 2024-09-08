@@ -65,6 +65,7 @@ const components = {
       },
 
       secondary: {
+        bg: 'orange.500',
         bgGradient: gradients.secondary,
         color: "white",
         borderRadius: "lg",

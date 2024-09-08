@@ -73,6 +73,7 @@ const PlaylistForm = () => {
                   outline={"2px solid transparent"}
                   bg={"white"}
                   size={"lg"}
+                  required
                   type="url"
                   isInvalid={form.errors.playlistUrl && form.touched.playlistUrl && field.value !== ""}
                 />
