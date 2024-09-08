@@ -19,7 +19,7 @@ const TextBlock = ({ head, body, children }) => {
             </Text>
           ))
         )}
-        <Box mt={2}>{children}</Box>
+        <Box mt={body.length === 1 ? 2 : 0}>{children}</Box>
       </Box>
     </Center>
   );
