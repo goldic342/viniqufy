@@ -56,30 +56,29 @@ const HomePage = () => {
             If you don&apos;t use Spotify, you can <Text as="b">import tracks</Text> from other services like Yandex
             Music or SoundCloud using the services below.
           </>,
-          <>
-            <UnorderedList ml={12}>
-              <ListItem>
-                <ChakraRouterLink href={"https://soundiiz.com/"} color={"blue.400"}>
-                  Soundiiz
-                </ChakraRouterLink>
-              </ListItem>
-              <ListItem>
-                <ChakraRouterLink href={"https://www.tunemymusic.com"} color={"blue.400"}>
-                  TuneMyMusic
-                </ChakraRouterLink>
-              </ListItem>
-              <ListItem>
-                <ChakraRouterLink
-                  href={"https://www.google.com/search?q=how+to+import+tracks+to+spotify"}
-                  color={"blue.400"}
-                >
-                  Other
-                </ChakraRouterLink>
-              </ListItem>
-            </UnorderedList>
-          </>,
         ]}
-      />
+      >
+        <UnorderedList ml={12}>
+          <ListItem>
+            <ChakraRouterLink href={"https://soundiiz.com/"} color={"blue.400"}>
+              Soundiiz
+            </ChakraRouterLink>
+          </ListItem>
+          <ListItem>
+            <ChakraRouterLink href={"https://www.tunemymusic.com"} color={"blue.400"}>
+              TuneMyMusic
+            </ChakraRouterLink>
+          </ListItem>
+          <ListItem>
+            <ChakraRouterLink
+              href={"https://www.google.com/search?q=how+to+import+tracks+to+spotify"}
+              color={"blue.400"}
+            >
+              Other
+            </ChakraRouterLink>
+          </ListItem>
+        </UnorderedList>
+      </TextBlock>
 
       <TextBlock
         head={"Privacy and collected Data"}

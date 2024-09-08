@@ -14,13 +14,13 @@ const TextBlock = ({ head, body, children }) => {
           <Text maxW={"2xl"}>{body[0]}</Text>
         ) : (
           body.map((block, index) => (
-            <Text key={index} maxW={"2xl"} mb={3} mt={1 / 0.5}>
+            <Text key={index} maxW={"2xl"} mb={3} mt={2}>
               {block}
             </Text>
           ))
         )}
+        <Box mt={2}>{children}</Box>
       </Box>
-      {children}
     </Center>
   );
 };
