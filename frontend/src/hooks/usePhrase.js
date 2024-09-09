@@ -3,12 +3,11 @@ import { useState, useEffect } from "react";
 /**
  * Returns a random phrase from given phrases array based on given value.
  *
- * @param {object} props
- * @prop {array} props.phrases - array of objects with max and phrases properties
- * @prop {boolean} props.trackingItem - whether to track value changes and value to compare with max in phrases array
+ * @param {array} props.phrases - array of objects with max and phrases properties
+ * @param {number|any} props.trackingItem - whether to track value changes and value to compare with max in phrases array
  * @returns {string} random phrase from given phrases array
  */
-export const usePhrase = ({ phrases, trackingItem }) => {
+export const usePhrase = (phrases, trackingItem) => {
   const [phrase, setPhrase] = useState("");
 
   useEffect(() => {
