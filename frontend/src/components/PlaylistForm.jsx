@@ -59,7 +59,7 @@ const PlaylistForm = () => {
       })}
       validate={validatePlaylist}
       onSubmit={(values) => {
-        navigate(`/analysis-loading/${values.playlistUrl.split("/").at(-1)}`);
+        navigate(`/analysis-loading/${parseUrl(values.playlistUrl).pathname.split("/").at(-1)}`);
       }}
     >
       {() => (
