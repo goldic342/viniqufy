@@ -76,7 +76,7 @@ const AnalysisLoadingPage = () => {
             <SkeletonText isLoaded={!!playlistInfo} fadeDuration={2} noOfLines={1} spacing={2} skeletonHeight={6}>
               <Box>
                 <Heading display={"inline-block"} variant="primary" fontWeight="bold">
-                  {playlistInfo.name ? normalizeText(playlistInfo.name, 15) : null}
+                  {playlistInfo.name ? normalizeText(playlistInfo.name, 30) : null}
                 </Heading>
                 <Text display={"inline-block"} fontSize="sm" color="gray.500">
                   &nbsp;by&nbsp;
