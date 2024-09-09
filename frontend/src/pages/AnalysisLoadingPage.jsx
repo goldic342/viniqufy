@@ -50,7 +50,10 @@ const AnalysisLoadingPage = () => {
     if (str.length <= maxLength) {
       return str;
     }
-    return str.slice(0, maxLength) + "...";
+
+    const sliced = str.slice(0, maxLength);
+
+    return sliced.at(-1) === " " ? sliced.slice(0, -1) + "..." : sliced + "...";
   };
 
   return (
@@ -110,7 +113,7 @@ const AnalysisLoadingPage = () => {
               </Flex>
             </SkeletonText>
             <SkeletonText skeletonHeight={6} noOfLines={1} fadeDuration={2} isLoaded={!!playlistInfo}>
-              <Text noOfLines={2} color={"gray.500"}>
+              <Text maxW={"18rem"} color={"gray.500"}>
                 {phrase}
               </Text>
             </SkeletonText>
