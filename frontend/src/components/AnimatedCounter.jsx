@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { motion, useAnimation } from "framer-motion";
+import { PropTypes } from "prop-types";
 
 const AnimatedCounter = ({
   endValue = 100,
@@ -11,6 +12,7 @@ const AnimatedCounter = ({
   suffix = "",
   textStyles = {},
   suffixStyles = {},
+  onComplete = () => {},
 }) => {
   const [count, setCount] = useState(0);
   const controls = useAnimation();
@@ -49,6 +51,10 @@ const AnimatedCounter = ({
       opacity: [0, 1],
       transition: { duration: 0.1 },
     });
+
+    if (count + step >= endValue) {
+      onComplete();
+    }
   }, [count, endValue, step, controls]);
 
   useEffect(() => {
@@ -88,4 +94,15 @@ const AnimatedCounter = ({
   );
 };
 
+AnimatedCounter.propTypes = {
+  endValue: PropTypes.number,
+  step: PropTypes.number,
+  duration: PropTypes.number,
+  finalStyles: PropTypes.object,
+  size: PropTypes.oneOf(["md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl", "8xl", "9xl"]),
+  suffix: PropTypes.string,
+  textStyles: PropTypes.object,
+  suffixStyles: PropTypes.object,
+  onComplete: PropTypes.func,
+};
 export default AnimatedCounter;
