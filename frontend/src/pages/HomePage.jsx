@@ -36,7 +36,7 @@ const HomePage = () => {
         fontWeight={"bold"}
         letterSpacing={"wide"}
         textAlign={"center"}
-        mt={20}
+        mt={28}
         mb={4}
       >
         Viniqufy tech tack and services
