@@ -98,11 +98,30 @@ const HomePage = () => {
         head={"Design and styles"}
         body={[
           <>
-            Most design solutions and styles copied from{" "}
+            Most design solutions and styles{" "}
+            <Text as="s" color={"gray.500"}>
+              stolen
+            </Text>{" "}
+            copied from{" "}
             <ChakraRouterLink href="https://www.uifoundations.com/" color={"blue.400"}>
               UI Foundations
             </ChakraRouterLink>
             , and all credit for these designs and styles belongs to them. <Text as="b">Developer ≠ designer</Text>
+          </>,
+        ]}
+      />
+      <TextBlock
+        head={"Similar tools"}
+        body={[
+          <>
+            There are{" "}
+            <ChakraRouterLink href={"https://www.google.com/search?q=spotify+playlist+analyzer"} color="blue.400">
+              many{" "}
+            </ChakraRouterLink>
+            similar applications, but they do not provide uniqueness, so I&apos;ve create my own. I borrowed a lot from{" "}
+            <ChakraRouterLink href={"https://www.chosic.com/spotify-playlist-analyzer/"} color="blue.400">
+              Chosic
+            </ChakraRouterLink>
           </>,
         ]}
       />
