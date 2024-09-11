@@ -1,12 +1,17 @@
 from typing import Optional
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from src.models import Playlist, Track, Artist, Task, TaskInitialization
+from src.models import TaskInitialization, Task
 
 
 # TODO: find way to avoid code duplication
-class SpotifyPlaylist(Playlist):
+class Playlist(BaseModel):
+    name: str
+    owner: str | None
+    id: UUID = uuid4()
+    tracks_count: int
     spotify_id: str
     image_url: str
     description: str
@@ -16,13 +21,15 @@ class SpotifyPlaylistStart(BaseModel):
     spotify_id: str
 
 
-class SpotifyArtist(Artist):
+class Artist(BaseModel):
+    name: str
+    id: UUID = uuid4()
     spotify_id: str
     genres: list[str]
     popularity: int = Field(ge=0, le=100)
 
 
-class SpotifyTrackAnalysis(BaseModel):
+class TrackAnalysis(BaseModel):
     spotify_id: str
     tempo: float
     key: int
@@ -34,11 +41,13 @@ class SpotifyTrackAnalysis(BaseModel):
     danceability: float = Field(ge=0, le=1)
 
 
-class SpotifyTrack(Track):
+class SpotifyTrack(BaseModel):
+    name: str
+    id: UUID = uuid4()
+    artists: list[Artist]
     spotify_id: str
     popularity: int = Field(ge=0, le=100)
-    artists: list[SpotifyArtist]  # override default property
-    analysis: SpotifyTrackAnalysis
+    analysis: TrackAnalysis
     release_year: int
 
 
@@ -47,4 +56,4 @@ class SpotifyTask(Task):
 
 
 class SpotifyTaskInitialization(TaskInitialization):
-    info: SpotifyPlaylist
+    info: Playlist

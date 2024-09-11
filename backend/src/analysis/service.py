@@ -7,11 +7,11 @@ from aiohttp import ClientSession
 from scipy.stats import entropy
 
 from src.config import settings
-from src.spotify.config import spotify_settings
-from src.spotify.schemas import SpotifyPlaylistStart, SpotifyTrack, SpotifyArtist, SpotifyTrackAnalysis, SpotifyPlaylist
+from src.analysis.config import analysis_settings
+from src.analysis.schemas import SpotifyPlaylistStart, SpotifyTrack, Artist, TrackAnalysis, Playlist
 
 
-class SpotifyService:
+class AnalysisService:
     # TODO: Add token caching, so all instances of class have the same token
     API_URL = 'https://api.spotify.com/v1'
     access_token = None
@@ -33,7 +33,7 @@ class SpotifyService:
         tracks = await self.__playlist_tracks(playlist.spotify_id)
         artists = list(chain.from_iterable(track.artists for track in tracks))
 
-        return self.__calculate_uniqueness(tracks, artists, spotify_settings.weights)
+        return self.__calculate_uniqueness(tracks, artists, analysis_settings.weights)
 
     async def __set_access_token(self) -> None:
         """
@@ -86,7 +86,7 @@ class SpotifyService:
         response = await self.session.get(f'{self.API_URL}{sub_url}', headers=headers)
 
         if response.status == 429:
-            await asyncio.sleep(spotify_settings.rate_limit_wait)
+            await asyncio.sleep(analysis_settings.rate_limit_wait)
             return await self.__get(sub_url)
 
         return await response.json()
@@ -101,7 +101,7 @@ class SpotifyService:
 
         return grouped_items
 
-    async def __parse_artists(self, artists_ids: list[str]) -> dict[str, SpotifyArtist]:
+    async def __parse_artists(self, artists_ids: list[str]) -> dict[str, Artist]:
         unique_artists = list(set(artists_ids))
 
         # Count the number of occurrences of each artist
@@ -122,7 +122,7 @@ class SpotifyService:
                 artist_id = artist['id']
 
                 spotify_artist = (
-                    SpotifyArtist(
+                    Artist(
                         name=artist['name'],
                         spotify_id=artist_id,
                         genres=artist['genres'],
@@ -136,7 +136,7 @@ class SpotifyService:
 
         return artists
 
-    async def __parse_audio_analysis(self, tracks_ids_groups: list[str]) -> dict[str, SpotifyTrackAnalysis]:
+    async def __parse_audio_analysis(self, tracks_ids_groups: list[str]) -> dict[str, TrackAnalysis]:
         audio_analysis = {}
 
         for group in tracks_ids_groups:
@@ -144,7 +144,7 @@ class SpotifyService:
 
             for track_features in response['audio_features']:
                 audio_analysis[track_features['id']] = (
-                    SpotifyTrackAnalysis(
+                    TrackAnalysis(
                         spotify_id=track_features['id'],
                         duration=track_features['duration_ms'],
                         loudness=track_features['loudness'],
@@ -226,7 +226,7 @@ class SpotifyService:
     async def playlist_info(self, playlist_id: str):
         playlist_info = await self.__get(f'/playlists/{playlist_id}')
 
-        return SpotifyPlaylist(
+        return Playlist(
             name=playlist_info['name'],
             spotify_id=playlist_info['id'],
             description=playlist_info['description'],
@@ -240,7 +240,7 @@ class SpotifyService:
 
     async def __track_audio_analysis(self, track_id: str):
         response = await self.__get(f'/audio-features/{track_id}')
-        return SpotifyTrackAnalysis(
+        return TrackAnalysis(
             spotify_id=track_id,
             duration=response['duration_ms'],
             loudness=response['loudness'],
@@ -299,7 +299,7 @@ class SpotifyService:
 
         return uniqueness_score
 
-    def __calculate_uniqueness(self, tracks: list[SpotifyTrack], artists: list[SpotifyArtist],
+    def __calculate_uniqueness(self, tracks: list[SpotifyTrack], artists: list[Artist],
                                weights: dict[str, int]) -> float:
         """
         Calculates the uniqueness of a playlist based on the popularity of tracks, artists, variety of genres,

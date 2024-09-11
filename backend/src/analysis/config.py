@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 
-class SpotifySettings(BaseSettings):
+class AnalysisSettings(BaseSettings):
     weights: dict[str, float] = {
         'popularity': 0.3,
         'artist_diversity': 0.2,
@@ -14,4 +14,4 @@ class SpotifySettings(BaseSettings):
     rate_limit_wait: int = 5
 
 
-spotify_settings = SpotifySettings()
+analysis_settings = AnalysisSettings()

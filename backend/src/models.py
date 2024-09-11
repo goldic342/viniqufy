@@ -1,25 +1,6 @@
 from typing import Any, Literal, Optional
-from uuid import UUID, uuid4
 
 from pydantic import BaseModel
-
-
-class Playlist(BaseModel):
-    name: str
-    owner: str | None
-    id: UUID = uuid4()
-    tracks_count: int
-
-
-class Artist(BaseModel):
-    name: str
-    id: UUID = uuid4()
-
-
-class Track(BaseModel):
-    name: str
-    id: UUID = uuid4()
-    artists: list[Artist]
 
 
 class Task(BaseModel):

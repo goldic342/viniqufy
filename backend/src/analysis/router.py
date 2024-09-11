@@ -1,11 +1,11 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from src.models import TaskStatusOutput
-from src.spotify.schemas import SpotifyPlaylistStart, SpotifyTask, SpotifyTaskInitialization
-from src.spotify.service import SpotifyService
-from src.spotify.utils import validate_spotify_id, base64_id
+from src.analysis.schemas import SpotifyPlaylistStart, SpotifyTask, SpotifyTaskInitialization
+from src.analysis.service import AnalysisService
+from src.analysis.utils import validate_spotify_id, base64_id
 
-router = APIRouter(prefix='/spotify', tags=['spotify'])
+router = APIRouter(prefix='/analysis', tags=['analysis'])
 
 # Later on tasks will be stored in database (Postgres or redis), this is MVP for now
 # WARNING: DO NOT USE THIS IN PRODUCTION
@@ -32,13 +32,13 @@ async def service_analysis_wrapper(task: SpotifyTask, playlist: SpotifyPlaylistS
     current_task = get_task(task)
     current_task.status = "in_progress"
 
-    async with SpotifyService() as spotify:
+    async with AnalysisService() as spotify:
         uniqueness = await spotify.get_uniqueness(playlist)
         current_task.status = "completed"
         current_task.result = uniqueness
 
 
-@router.post('/analysis', response_model=SpotifyTaskInitialization)
+@router.post('/start', response_model=SpotifyTaskInitialization)
 async def start_analysis(playlist: SpotifyPlaylistStart, background_tasks: BackgroundTasks):
     if not validate_spotify_id(playlist.spotify_id):
         raise HTTPException(status_code=400, detail='Spotify id is not valid')
@@ -49,13 +49,13 @@ async def start_analysis(playlist: SpotifyPlaylistStart, background_tasks: Backg
     # Add task to tasks list
     background_tasks.add_task(service_analysis_wrapper, task, playlist)
 
-    async with SpotifyService() as spotify:
+    async with AnalysisService() as spotify:
         playlist_info = await spotify.playlist_info(playlist.spotify_id)
 
     return SpotifyTaskInitialization(task_id=task.task_id, info=playlist_info, status=task.status)
 
 
-@router.get('/analysis-status', response_model=TaskStatusOutput)
+@router.get('/status', response_model=TaskStatusOutput)
 async def get_analysis_status(task_id: str):
     task = get_task(task_id)
 
@@ -65,7 +65,7 @@ async def get_analysis_status(task_id: str):
     return TaskStatusOutput(task_id=task.task_id, status=task.status)
 
 
-@router.get('/analysis-result', response_model=SpotifyTask)
+@router.get('/result', response_model=SpotifyTask)
 async def get_analysis_result(task_id: str):
     task = get_task(task_id)
 

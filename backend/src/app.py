@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.spotify.router import router
+from src.analysis.router import router
 
 app = FastAPI()
 

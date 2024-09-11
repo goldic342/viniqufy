@@ -6,7 +6,7 @@ export default class AnalysisService {
   apiBaseUrl = "http://localhost:8000";
 
   async getAnalysisStatus(taskId) {
-    const response = await axios.get(`${this.apiBaseUrl}/spotify/analysis-status`, {
+    const response = await axios.get(`${this.apiBaseUrl}/analysis/status`, {
       params: { task_id: taskId },
     });
     if (response.status !== 200) {
@@ -16,7 +16,7 @@ export default class AnalysisService {
   }
 
   async fetchAnalysis(taskId) {
-    const response = await axios.get(`${this.apiBaseUrl}/spotify/analysis-result`, {
+    const response = await axios.get(`${this.apiBaseUrl}/analysis/result`, {
       params: { task_id: taskId },
     });
 
@@ -35,7 +35,7 @@ export default class AnalysisService {
   }
 
   async startAnalysis(spotifyId) {
-    const response = await axios.post(`${this.apiBaseUrl}/spotify/analysis`, {
+    const response = await axios.post(`${this.apiBaseUrl}/analysis/start`, {
       spotify_id: spotifyId,
     });
 
