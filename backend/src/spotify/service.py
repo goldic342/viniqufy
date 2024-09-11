@@ -102,15 +102,26 @@ class SpotifyService:
         return grouped_items
 
     async def __parse_artists(self, artists_ids: list[str]) -> dict[str, SpotifyArtist]:
+        unique_artists = list(set(artists_ids))
+
+        # Count the number of occurrences of each artist
+        artists_entry = {}
+        for string in unique_artists:
+            if string in artists_entry:
+                artists_entry[string] += 1
+            else:
+                artists_entry[string] = 1
+
+        grouped_artists = self.__group_items(unique_artists, group_size=50)
         artists = {}
 
-        for id_group in artists_ids:
+        for id_group in grouped_artists:
             response = await self.__get(f'/artists?ids={id_group}')
 
             for artist in response['artists']:
                 artist_id = artist['id']
 
-                artists[artist_id] = (
+                spotify_artist = (
                     SpotifyArtist(
                         name=artist['name'],
                         spotify_id=artist_id,
@@ -118,6 +129,10 @@ class SpotifyService:
                         popularity=artist['popularity'],
                     )
                 )
+
+                # Add an artist as many times as specified in artists_entry
+                for _ in range(artists_entry[artist_id]):
+                    artists[artist_id] = spotify_artist
 
         return artists
 
@@ -166,7 +181,7 @@ class SpotifyService:
             for artist in track['artists']:
                 artists_ids.append(artist['id'])
 
-        artists = await self.__parse_artists(self.__group_items(artists_ids, group_size=50))
+        artists = await self.__parse_artists(artists_ids)
         analysis = await self.__parse_audio_analysis(self.__group_items(tracks_ids))
 
         for track_data in tracks:
