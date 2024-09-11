@@ -1,83 +1,130 @@
-import {
-  Container,
-  Flex,
-  Heading,
-  Highlight,
-  Input,
-  Text,
-  InputRightElement,
-  InputGroup,
-  Button,
-} from "@chakra-ui/react";
-import "@fontsource/montserrat/500.css";
-import { useState } from "react";
-import { musicServices } from "../data";
-import { useNavigate } from "react-router-dom";
-import parseUrl from "parse-url";
+import { Container, Box, Heading, Text, VStack, Flex, UnorderedList, ListItem } from "@chakra-ui/react";
+import PlaylistForm from "../components/PlaylistForm";
+import TextBlock from "../components/TextBlock";
+import LogoItem from "../components/UI/LogoItem";
+import FastAPILogo from "../assets/FastAPI.svg";
+import ChakraUILogo from "../assets/Chakra-UI.svg";
+import SpotifyLogo from "../assets/Spotify.svg";
+import IsHostingLogo from "../assets/is-hosting.svg";
+import ReactLogo from "../assets/React.svg";
+import ChakraRouterLink from "../components/ChakraRouterLink";
 
 const HomePage = () => {
-  const navigate = useNavigate();
-  const [url, setUrl] = useState("");
-  const [urlInvalid, setUrlInvalid] = useState(false);
-
-  const validateUrl = (passedUrl) => {
-    let parsedUrl;
-    try {
-      parsedUrl = parseUrl(passedUrl);
-    } catch {
-      return false;
-    }
-
-    const service = musicServices.filter((service) => service.domain === parsedUrl.resource)[0];
-    const paths = parsedUrl.pathname.split("/").slice(1);
-
-    if (!service) return false;
-    if (paths.length !== 2) return false;
-    if (paths[0] !== service.urlPath) return false;
-    
-    const base62Id = paths[1];
-    const base62Regex = /^[A-Za-z0-9]+$/;
-    return base62Regex.test(base62Id) ? base62Id : false;
-  };
-
-  const handleClick = () => {
-    const playlistId = validateUrl(url);
-    if (!playlistId) {
-      setUrlInvalid(true);
-      return;
-    }
-
-    navigate(`/analysis-loading/${playlistId}`);
-  };
-
   return (
-    <Container maxW={"4xl"} h={"100vh"}>
-      <Flex justify={"center"} align={"center"} flexDirection={"column"} h={"100%"}>
-        <Heading as={"h1"} fontSize={"5xl"} fontFamily={'"Montserrat", sans-serif'}>
-          <Highlight query={"unique"} styles={{ bg: "purple.500", color: "white", fontWeight: "bold" }}>
-            Is your music taste unique
-          </Highlight>
-        </Heading>
-        <Text color={"gray.400"} fontSize={"lg"} mt={"4px"}>
-          Paste your playlist link, and we&apos;ll tell you how unique your taste is!
-        </Text>
-        <InputGroup w={"60%"} size={"lg"} mt={"10px"}>
-          <Input
-            placeholder="Link to your playlist"
-            borderRadius={"2xl"}
-            type={"url"}
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            isInvalid={urlInvalid}
-            required
-          />
-          <InputRightElement>
-            <Button size={"lg"} onClick={handleClick}>
-              Go
-            </Button>
-          </InputRightElement>
-        </InputGroup>
+    <Container maxW={"container.xl"}>
+      <Box as="section">
+        <VStack spacing={6} pt={40}>
+          <VStack>
+            <Heading variant={"bold"} fontSize={"5xl"} as={"h1"}>
+              How
+              <Text variant={"primary"} fontSize={"5xl"} display={"inline-block"}>
+                &nbsp;Unique&nbsp;
+              </Text>
+              is Your Playlist?
+            </Heading>
+            <Text fontSize={"xl"} color={"gray.500"}>
+              Analyze and compare your music to discover just how unique your taste is!
+            </Text>
+          </VStack>
+          <PlaylistForm />
+        </VStack>
+      </Box>
+      <Text
+        textTransform={"uppercase"}
+        color={"gray.300"}
+        fontSize={"sm"}
+        fontWeight={"bold"}
+        letterSpacing={"wide"}
+        textAlign={"center"}
+        mt={28}
+        mb={4}
+      >
+        Viniqufy tech tack and services
+      </Text>
+      <Flex mb={10} justify={"center"} align={"center"} gap={"24px"} wrap={"wrap"}>
+        <LogoItem src={IsHostingLogo} href={"https://ishosting.com"} alt="is*hosting" />
+        <LogoItem src={FastAPILogo} href={"https://fastapi.tiangolo.com"} alt="FastAPI" />
+        <LogoItem src={ChakraUILogo} href={"https://v2.chakra-ui.com/"} alt="Chakra UI" />
+        <LogoItem src={SpotifyLogo} href={"https://developer.spotify.com/"} alt="Spotify" />
+        <LogoItem src={ReactLogo} href={"https://react.dev/"} alt="React" />
       </Flex>
+
+      <TextBlock
+        head={'"I don\'t use Spotify"'}
+        body={[
+          <>
+            If you don&apos;t use Spotify, you can <Text as="b">import tracks</Text> from other services like Yandex
+            Music or SoundCloud using the services below.
+          </>,
+        ]}
+      >
+        <UnorderedList ml={12}>
+          <ListItem>
+            <ChakraRouterLink href={"https://soundiiz.com/"} color={"blue.400"}>
+              Soundiiz
+            </ChakraRouterLink>
+          </ListItem>
+          <ListItem>
+            <ChakraRouterLink href={"https://www.tunemymusic.com"} color={"blue.400"}>
+              TuneMyMusic
+            </ChakraRouterLink>
+          </ListItem>
+          <ListItem>
+            <ChakraRouterLink
+              href={"https://www.google.com/search?q=how+to+import+tracks+to+spotify"}
+              color={"blue.400"}
+            >
+              Other
+            </ChakraRouterLink>
+          </ListItem>
+        </UnorderedList>
+      </TextBlock>
+
+      <TextBlock
+        head={"Privacy and collected Data"}
+        body={[
+          <>
+            We focus solely on playlist content. <Text as="b">No user-specific data</Text> like IP addresses or browser
+            details is collected or stored, ensuring your personal information stays private. The{" "}
+            <Text as="b">exception</Text> is spotify-ID and spotify display-name
+          </>,
+          <>
+            We <Text as="b">do not share</Text> any data with third parties. Your information stays secure and private,
+            used solely for playlist analysis.
+          </>,
+        ]}
+      />
+      <TextBlock
+        head={"Design and styles"}
+        body={[
+          <>
+            Most design solutions and styles{" "}
+            <Text as="s" color={"gray.500"}>
+              stolen
+            </Text>{" "}
+            copied from{" "}
+            <ChakraRouterLink href="https://www.uifoundations.com/" color={"blue.400"}>
+              UI Foundations
+            </ChakraRouterLink>
+            , and all credit for these designs and styles belongs to them. <Text as="b">Developer ≠ designer</Text>
+          </>,
+        ]}
+      />
+      <TextBlock
+        head={"Similar tools"}
+        body={[
+          <>
+            There are{" "}
+            <ChakraRouterLink href={"https://www.google.com/search?q=spotify+playlist+analyzer"} color="blue.400">
+              many{" "}
+            </ChakraRouterLink>
+            similar applications, but they do not provide uniqueness, so I&apos;ve create my own. I borrowed a lot from{" "}
+            <ChakraRouterLink href={"https://www.chosic.com/spotify-playlist-analyzer/"} color="blue.400">
+              Chosic
+            </ChakraRouterLink>
+          </>,
+        ]}
+      />
     </Container>
   );
 };
