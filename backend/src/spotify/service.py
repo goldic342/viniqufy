@@ -1,5 +1,4 @@
 import asyncio
-from copy import deepcopy
 from datetime import datetime, timedelta
 from itertools import chain
 
@@ -92,76 +91,114 @@ class SpotifyService:
 
         return await response.json()
 
-    async def __parse_tracks(self,
-                             tracks: dict,
-                             parsed_artists: list[SpotifyArtist],
-                             parsed_audio_analysis: list[SpotifyTrackAnalysis]) -> \
-            tuple[list[SpotifyTrack], list[SpotifyArtist], list[SpotifyTrackAnalysis]]:
+    @staticmethod
+    def __group_items(items: list[str], group_size: int = 100) -> list[str]:
+        grouped_items = []
+
+        for i in range(0, len(items), group_size):
+            group = ','.join(items[i:i + group_size])
+            grouped_items.append(group)
+
+        return grouped_items
+
+    async def __parse_artists(self, artists_ids: list[str]) -> dict[str, SpotifyArtist]:
+        artists = {}
+
+        for id_group in artists_ids:
+            response = await self.__get(f'/artists?ids={id_group}')
+
+            for artist in response['artists']:
+                artist_id = artist['id']
+
+                artists[artist_id] = (
+                    SpotifyArtist(
+                        name=artist['name'],
+                        spotify_id=artist_id,
+                        genres=artist['genres'],
+                        popularity=artist['popularity'],
+                    )
+                )
+
+        return artists
+
+    async def __parse_audio_analysis(self, tracks_ids_groups: list[str]) -> dict[str, SpotifyTrackAnalysis]:
+        audio_analysis = {}
+
+        for group in tracks_ids_groups:
+            response = await self.__get(f'/audio-features?ids={group}')
+
+            for track_features in response['audio_features']:
+                audio_analysis[track_features['id']] = (
+                    SpotifyTrackAnalysis(
+                        spotify_id=track_features['id'],
+                        duration=track_features['duration_ms'],
+                        loudness=track_features['loudness'],
+                        danceability=track_features['danceability'],
+                        energy=track_features['energy'],
+                        key=track_features['key'],
+                        mode=track_features['mode'],
+                        tempo=track_features['tempo'],
+                        valence=track_features['valence']
+                    )
+                )
+
+        return audio_analysis
+
+    async def __parse_tracks(self, tracks: dict, ) -> list[SpotifyTrack]:
         """
         Parse tracks json, loads additional data such as artist info, audio analysis and then convert to pydantic schema
         :param tracks: Raw tracks json (dict)
-        :param parsed_artists: List of already parsed SpotifyArtist instances
-        :param parsed_audio_analysis: List of already parsed SpotifyTrackAnalysis instances
         :return: List of tracks as pydantic model, modified artist list and audio analysis list
         """
         result: list[SpotifyTrack] = []
-
-        # To prevent mutations
-        parsed_artists_copy = deepcopy(parsed_artists)
-        parsed_audio_analysis_copy = deepcopy(parsed_audio_analysis)
+        artists_ids = []
+        tracks_ids = []
 
         for track_data in tracks:
-            track = track_data['track']
-            artists = []
+            track = track_data.get('track')
+
+            # API issue fix: https://github.com/spotify/web-api/issues/958
+            if not track:
+                continue
+
+            tracks_ids.append(track['id'])
 
             for artist in track['artists']:
-                existing_artist = next((a for a in parsed_artists_copy if a.spotify_id == artist['id']), None)
-                if existing_artist:
-                    artists.append(existing_artist)
-                    continue
+                artists_ids.append(artist['id'])
 
-                artist_info = await self.__artist_info(artist['id'])
-                artist_schema = SpotifyArtist(
-                    name=artist_info['name'],
-                    spotify_id=artist_info['id'],
-                    genres=artist_info['genres'],
-                    popularity=artist_info['popularity'],
+        artists = await self.__parse_artists(self.__group_items(artists_ids, group_size=50))
+        analysis = await self.__parse_audio_analysis(self.__group_items(tracks_ids))
+
+        for track_data in tracks:
+            track = track_data.get('track')
+
+            # API issue fix: https://github.com/spotify/web-api/issues/958
+            if not track:
+                continue
+
+            track_id = track['id']
+
+            result.append(
+                SpotifyTrack(
+                    name=track['name'],
+                    spotify_id=track_id,
+                    artists=[artists[artist['id']] for artist in track['artists']],
+                    popularity=track['popularity'],
+                    analysis=analysis[track_id],
+                    release_year=track['album']['release_date'][:4]
                 )
-                artists.append(artist_schema)
-                parsed_artists_copy.append(artist_schema)
+            )
 
-            audio_analysis = next(
-                (analysis for analysis in parsed_audio_analysis_copy if analysis.spotify_id == track['id']), None)
-            if not audio_analysis:
-                audio_analysis = await self.__track_audio_analysis(track['id'])
-                parsed_audio_analysis_copy.append(audio_analysis)
+        return result
 
-            result.append(SpotifyTrack(
-                name=track['name'],
-                spotify_id=track['id'],
-                popularity=track['popularity'],
-                release_year=track['album']['release_date'].split('-')[0],
-                artists=artists,
-                analysis=audio_analysis
-            ))
-
-        return result, parsed_artists_copy, parsed_audio_analysis_copy
-
-    async def __playlist_tracks(self, playlist_id: str, limit: int = 30) -> list[SpotifyTrack]:
+    async def __playlist_tracks(self, playlist_id: str, limit: int = 100) -> list[SpotifyTrack]:
         tracks = []
         current_url = f'/playlists/{playlist_id}/tracks?limit={limit}'
-
-        artists = []
-        audio_analysis = []
 
         while current_url:
             response = await self.__get(current_url)
 
-            parsed_tracks, artists, audio_analysis = await self.__parse_tracks(
-                response['items'],
-                artists,
-                audio_analysis
-            )
+            parsed_tracks = await self.__parse_tracks(response['items'])
 
             tracks.extend(parsed_tracks)
 
