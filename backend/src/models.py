@@ -8,7 +8,7 @@ class Task(BaseModel):
 
 
 class TaskStatus(Task):
-    status: Literal['PENDING', 'FAILED', 'SUCCESS', 'REVOKED']
+    status: Literal['PENDING', 'FAILED', 'SUCCESS', 'REVOKED', 'STARTED']
 
 
 class TaskResult(Task):
