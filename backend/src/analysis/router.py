@@ -1,78 +1,48 @@
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from celery.result import AsyncResult
+from fastapi import APIRouter
 
-from src.models import TaskStatusOutput
-from src.analysis.schemas import SpotifyPlaylistStart, SpotifyTask, SpotifyTaskInitialization
+from src.analysis.exceptions import InvalidTaskId, InvalidSpotifyId
+from src.analysis.schemas import PlaylistIdInput, AnalysisTaskInit, AnalysisTaskResult
 from src.analysis.service import AnalysisService
-from src.analysis.utils import validate_spotify_id, base64_id
+from src.analysis.tasks import analyse_playlist
+from src.analysis.utils import encode_uuid, decode_uuid, is_valid_base64
+from src.analysis.utils import validate_spotify_id
+from src.exceptions import TaskNotCompleted
+from src.models import TaskStatus
 
 router = APIRouter(prefix='/analysis', tags=['analysis'])
 
-# Later on tasks will be stored in database (Postgres or redis), this is MVP for now
-# WARNING: DO NOT USE THIS IN PRODUCTION
-tasks: list[SpotifyTask] = []
 
-
-def get_task(task: SpotifyTask | str) -> SpotifyTask | None:
-    # May moved to utils, but standing here for global tasks scope
-    global tasks
-
-    if isinstance(task, str):
-        try:
-            task = [t for t in tasks if task == t.task_id][0]
-        except IndexError:
-            return None
-    try:
-        return tasks[tasks.index(task)]
-    except ValueError:
-        return None
-
-
-async def service_analysis_wrapper(task: SpotifyTask, playlist: SpotifyPlaylistStart):
-    # In context of MVP index won't be changed during analysis
-    current_task = get_task(task)
-    current_task.status = "in_progress"
-
-    async with AnalysisService() as spotify:
-        uniqueness = await spotify.get_uniqueness(playlist)
-        current_task.status = "completed"
-        current_task.result = uniqueness
-
-
-@router.post('/start', response_model=SpotifyTaskInitialization)
-async def start_analysis(playlist: SpotifyPlaylistStart, background_tasks: BackgroundTasks):
+@router.post('/start', response_model=AnalysisTaskInit)
+async def start_analysis(playlist: PlaylistIdInput):
     if not validate_spotify_id(playlist.spotify_id):
-        raise HTTPException(status_code=400, detail='Spotify id is not valid')
+        raise InvalidSpotifyId(playlist.spotify_id)
 
-    task = SpotifyTask(task_id=base64_id(), status="created")
-    tasks.append(task)
-
-    # Add task to tasks list
-    background_tasks.add_task(service_analysis_wrapper, task, playlist)
+    task = analyse_playlist.delay(playlist)
+    task_id = encode_uuid(task.task_id)  # base-64 task-id (only for better look of id on frontend)
 
     async with AnalysisService() as spotify:
         playlist_info = await spotify.playlist_info(playlist.spotify_id)
 
-    return SpotifyTaskInitialization(task_id=task.task_id, info=playlist_info, status=task.status)
+    return AnalysisTaskInit(task_id=task_id, info=playlist_info)
 
 
-@router.get('/status', response_model=TaskStatusOutput)
+# PyCharm only ↓ because of celery.status return Any
+# noinspection PyTypeChecker
+@router.get('/status', response_model=TaskStatus)
 async def get_analysis_status(task_id: str):
-    task = get_task(task_id)
+    if not is_valid_base64(task_id):
+        raise InvalidTaskId(task_id=task_id)
 
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    return TaskStatusOutput(task_id=task.task_id, status=task.status)
+    task = AsyncResult(decode_uuid(task_id))
+    return TaskStatus(task_id=task.task_id, status=task.status)
 
 
-@router.get('/result', response_model=SpotifyTask)
+@router.get('/result', response_model=AnalysisTaskResult)
 async def get_analysis_result(task_id: str):
-    task = get_task(task_id)
+    task = AsyncResult(decode_uuid(task_id))
 
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    if task.status != 'SUCCESS':
+        raise TaskNotCompleted(task_id=task.task_id)
 
-    if task.status != "completed":
-        raise HTTPException(status_code=400, detail="Task not completed")
-
-    return task
+    return AnalysisTaskResult(task_id=task.task_id, result=task.result)
