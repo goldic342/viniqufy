@@ -1,6 +1,6 @@
 from celery import Celery
 
-from src import celeryconfig
+from src.config import CeleryConfig
 
 celery = Celery('tasks')
-celery.config_from_object(celeryconfig)
+celery.config_from_object(CeleryConfig)
