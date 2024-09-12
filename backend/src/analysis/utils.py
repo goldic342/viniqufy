@@ -33,7 +33,7 @@ def is_valid_base64(base64_str):
         return False
 
     try:
-        return base64.b64encode(base64.b64decode(s)) == s
+        return base64.b64encode(base64.b64decode(base64_str)) == base64_str
     except Exception:
         return False
 
