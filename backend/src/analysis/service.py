@@ -8,7 +8,7 @@ from scipy.stats import entropy
 
 from src.config import settings
 from src.analysis.config import analysis_settings
-from src.analysis.schemas import SpotifyPlaylistStart, SpotifyTrack, Artist, TrackAnalysis, Playlist
+from src.analysis.schemas import PlaylistIdInput, SpotifyTrack, Artist, TrackAnalysis, Playlist
 
 
 class AnalysisService:
@@ -29,7 +29,7 @@ class AnalysisService:
     async def __aexit__(self, exc_type, exc, tb):
         await self.session.close()
 
-    async def get_uniqueness(self, playlist: SpotifyPlaylistStart) -> float:
+    async def get_uniqueness(self, playlist: PlaylistIdInput) -> float:
         tracks = await self.__playlist_tracks(playlist.spotify_id)
         artists = list(chain.from_iterable(track.artists for track in tracks))
 

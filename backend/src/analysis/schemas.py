@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from src.models import TaskInit, Task, TaskResult
+from src.models import TaskInit,  TaskResult
 
 
 # TODO: find way to avoid code duplication
@@ -17,7 +17,7 @@ class Playlist(BaseModel):
     description: str
 
 
-class SpotifyPlaylistStart(BaseModel):
+class PlaylistIdInput(BaseModel):
     spotify_id: str
 
 
