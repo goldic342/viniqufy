@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from src.models import TaskInitialization, Task
+from src.models import TaskInit,  TaskResult
 
 
 # TODO: find way to avoid code duplication
@@ -17,7 +17,7 @@ class Playlist(BaseModel):
     description: str
 
 
-class SpotifyPlaylistStart(BaseModel):
+class PlaylistIdInput(BaseModel):
     spotify_id: str
 
 
@@ -38,7 +38,7 @@ class TrackAnalysis(BaseModel):
     duration: float
     energy: float = Field(ge=0, le=1)
     valence: float = Field(ge=0, le=1)
-    danceability: float = Field(ge=0, le=1)
+    dance_ability: float = Field(ge=0, le=1)
 
 
 class SpotifyTrack(BaseModel):
@@ -51,9 +51,9 @@ class SpotifyTrack(BaseModel):
     release_year: int
 
 
-class SpotifyTask(Task):
-    result: Optional[float] = None
+class AnalysisTaskResult(TaskResult):
+    result: Optional[float]
 
 
-class SpotifyTaskInitialization(TaskInitialization):
+class AnalysisTaskInit(TaskInit):
     info: Playlist

@@ -8,7 +8,7 @@ from scipy.stats import entropy
 
 from src.config import settings
 from src.analysis.config import analysis_settings
-from src.analysis.schemas import SpotifyPlaylistStart, SpotifyTrack, Artist, TrackAnalysis, Playlist
+from src.analysis.schemas import PlaylistIdInput, SpotifyTrack, Artist, TrackAnalysis, Playlist
 
 
 class AnalysisService:
@@ -29,7 +29,7 @@ class AnalysisService:
     async def __aexit__(self, exc_type, exc, tb):
         await self.session.close()
 
-    async def get_uniqueness(self, playlist: SpotifyPlaylistStart) -> float:
+    async def get_uniqueness(self, playlist: PlaylistIdInput) -> float:
         tracks = await self.__playlist_tracks(playlist.spotify_id)
         artists = list(chain.from_iterable(track.artists for track in tracks))
 
@@ -148,7 +148,7 @@ class AnalysisService:
                         spotify_id=track_features['id'],
                         duration=track_features['duration_ms'],
                         loudness=track_features['loudness'],
-                        danceability=track_features['danceability'],
+                        dance_ability=track_features['danceability'],
                         energy=track_features['energy'],
                         key=track_features['key'],
                         mode=track_features['mode'],
@@ -244,7 +244,7 @@ class AnalysisService:
             spotify_id=track_id,
             duration=response['duration_ms'],
             loudness=response['loudness'],
-            danceability=response['danceability'],
+            dance_ability=response['danceability'],
             energy=response['energy'],
             key=response['key'],
             mode=response['mode'],
@@ -390,7 +390,7 @@ class AnalysisService:
         modes = [track.analysis.mode for track in tracks]
         energies = [track.analysis.energy for track in tracks]
         valences = [track.analysis.valence for track in tracks]
-        danceabilities = [track.analysis.danceability for track in tracks]
+        danceabilities = [track.analysis.dance_ability for track in tracks]
 
         M = np.mean([
             self.__data_set_uniqueness(tempos),
