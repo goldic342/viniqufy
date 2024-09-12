@@ -40,6 +40,9 @@ async def get_analysis_status(task_id: str):
 
 @router.get('/result', response_model=AnalysisTaskResult)
 async def get_analysis_result(task_id: str):
+    if not is_valid_base64(task_id):
+        raise InvalidTaskId(task_id=task_id)
+
     task = AsyncResult(decode_uuid(task_id))
 
     if task.status != 'SUCCESS':

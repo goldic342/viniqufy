@@ -25,21 +25,23 @@ def validate_spotify_id(spotify_id: str) -> bool:
 def is_valid_base64(base64_str):
     base64_str = base64_str.strip()
 
-    if len(base64_str) % 4 != 0:
+    if not re.match(r'^[-A-Za-z0-9_]*={0,2}$', base64_str):
         return False
 
-    base64_pattern = re.compile(r'^[A-Za-z0-9+/]*={0,2}$')
-    if not base64_pattern.match(base64_str):
-        return False
+    # Add padding if necessary
+    padding = len(base64_str) % 4
+    if padding:
+        base64_str += '=' * (4 - padding)
 
     try:
-        return base64.b64encode(base64.b64decode(base64_str)) == base64_str
-    except Exception:
+        base64.urlsafe_b64decode(base64_str)
+        return True
+    except Exception as e:
+        print(e)
         return False
 
 
 # Made only for a more beautiful look of uuid
-
 def encode_uuid(uuid_str: str | UUID) -> str:
     """
     Encodes UUID bytes to base-64
