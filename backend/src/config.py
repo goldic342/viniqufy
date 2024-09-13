@@ -1,3 +1,7 @@
+from typing import Any
+
+from pydantic import PostgresDsn, field_validator
+from pydantic_core.core_schema import FieldValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,7 +9,28 @@ class Settings(BaseSettings):
     SPOTIFY_CLIENT_ID: str
     SPOTIFY_CLIENT_SECRET: str
 
-    model_config = SettingsConfigDict(env_file=".env")
+    DATABASE_USER: str
+    DATABASE_HOST: str
+    DATABASE_PASSWORD: str
+    DATABASE_PORT: int
+    DATABASE_NAME: str
+    ASYNC_DATABASE_URI: PostgresDsn | str = ""
+
+    @field_validator("ASYNC_DATABASE_URI", mode="after")
+    def assemble_db_connection(cls, v: str | None, info: FieldValidationInfo) -> Any:
+        if isinstance(v, str):
+            if v == "":
+                return PostgresDsn.build(
+                    scheme="postgresql+asyncpg",
+                    username=info.data["DATABASE_USER"],
+                    password=info.data["DATABASE_PASSWORD"],
+                    host=info.data["DATABASE_HOST"],
+                    port=info.data["DATABASE_PORT"],
+                    path=info.data["DATABASE_NAME"],
+                )
+        return v
+
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=".env")
 
 
 class CeleryConfig:
