@@ -1,6 +1,14 @@
 from enum import Enum
 
 
+class AnalysisStatus(Enum):
+    PENDING = "pending"
+    STARTED = "started"
+    SUCCESS = "success"
+    FAILED = "failed"
+    REVOKED = "revoked"
+
+
 class Genre(Enum):
     ACOUSTIC = "acoustic"
     AFROBEAT = "afrobeat"
