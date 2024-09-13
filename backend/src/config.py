@@ -30,6 +30,9 @@ class Settings(BaseSettings):
                 )
         return v
 
+    TRACK_EXPIRY_DAYS: int = 7
+    ARTIST_EXPIRY_DAYS: int = 7
+
     model_config = SettingsConfigDict(case_sensitive=True, env_file=".env")
 
 

@@ -1,18 +1,29 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import text, ForeignKey, Table, Column, String, Enum as SQLAlchemyEnum, UUID as SQLALCHEMY_UUID
-from sqlalchemy.orm import mapped_column, Mapped, validates, relationship
+from sqlalchemy import text, ForeignKey, Table, Column, String, Enum as SQLAlchemyEnum, UUID as SQLALCHEMY_UUID, \
+    DateTime
+from sqlalchemy.orm import mapped_column, Mapped, validates, relationship, declared_attr
 
 from src.analysis.enums import AnalysisStatus
 from src.analysis.enums import Genre as GenreEnum
 from src.analysis.utils import validate_popularity
 from src.database import Base
+from src.config import settings
 
 
 class BaseTable(Base):
     __abstract__ = True
     created_at: Mapped[datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
+
+
+class ExpireTable(BaseTable):
+    __abstract__ = True
+    updated_at: Mapped[datetime] = mapped_column(onupdate=text("TIMEZONE('utc', now())"))
+
+    @declared_attr
+    def expires_at(self) -> Mapped[datetime]:
+        return mapped_column(DateTime, default=lambda: datetime.now() + timedelta(days=self.expiers_after))
 
 
 # Association tables
@@ -82,7 +93,7 @@ class Analysis(BaseTable):
     playlist_version: Mapped["PlaylistVersion"] = relationship("PlaylistVersion", back_populates="analysis")
 
 
-class Track(BaseTable):
+class Track(ExpireTable):
     __tablename__ = "track"
 
     track_id: Mapped[str] = mapped_column(primary_key=True)
@@ -90,6 +101,9 @@ class Track(BaseTable):
     release_date: Mapped[date]
     explicit: Mapped[bool]
     popularity: Mapped[int]
+
+    expires_after = settings.TRACK_EXPIRY_DAYS
+
     track_features: Mapped["TrackFeatures"] = relationship("TrackFeatures", back_populates="track", uselist=False)
     artists: Mapped[list["Artist"]] = relationship("Artist", secondary=artist_track_association,
                                                    back_populates='tracks')
@@ -125,13 +139,17 @@ class TrackFeatures(BaseTable):
     track: Mapped["Track"] = relationship("Track", back_populates="track_features")
 
 
-class Artist(BaseTable):
+class Artist(ExpireTable):
     __tablename__ = "artist"
 
     artist_id: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str]
     followers: Mapped[int]
     popularity: Mapped[int]
+
+    expires_after = settings.ARTIST_EXPIRY_DAYS
+
+
     genres: Mapped[list["Genre"]] = relationship('Genre', secondary=artist_genre_association, back_populates="artists")
     tracks: Mapped[list["Track"]] = relationship("Track", secondary=artist_track_association, back_populates="artists")
 
