@@ -2,10 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_async_sqlalchemy import SQLAlchemyMiddleware
 
-from database import engine
 from src.analysis.router import router
+from src.config import settings
 
 app = FastAPI()
+
+app.include_router(router)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,7 +19,11 @@ app.add_middleware(
 
 app.add_middleware(
     SQLAlchemyMiddleware,
-    engine=engine,  # Custom engine, params set in database.py
+    db_url=str(settings.ASYNC_DATABASE_URI),
+    engine_args={
+        "echo": True,
+        'pool_size': 5,
+        "max_overflow": 10
+    }
 )
 
-app.include_router(router)
