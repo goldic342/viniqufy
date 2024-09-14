@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import text, ForeignKey, Table, Column, String, Enum as SQLAlchemyEnum, UUID as SQLALCHEMY_UUID, \
     DateTime
@@ -52,7 +52,7 @@ playlist_track_association = Table(
 class Playlist(BaseTable):
     __tablename__ = "playlist"
 
-    playlist_id: Mapped[UUID] = mapped_column(primary_key=True, default=UUID, unique=True)
+    playlist_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, unique=True)
     spotify_playlist_id: Mapped[str] = mapped_column(unique=True)
     current_snapshot_id: Mapped[str]
 
@@ -63,7 +63,7 @@ class Playlist(BaseTable):
 class PlaylistVersion(BaseTable):
     __tablename__ = "playlist_version"
 
-    version_id: Mapped[UUID] = mapped_column(primary_key=True, default=UUID, unique=True)
+    version_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, unique=True)
     playlist_id: Mapped[UUID] = mapped_column(ForeignKey("playlist.playlist_id"))
     snapshot_id: Mapped[str] = mapped_column(unique=True)
     name: Mapped[str]
@@ -82,7 +82,7 @@ class PlaylistVersion(BaseTable):
 class Analysis(BaseTable):
     __tablename__ = "analysis"
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=UUID, unique=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, unique=True)
     playlist_version_id: Mapped[UUID] = mapped_column(ForeignKey("playlist_version.version_id"))
     status: Mapped[AnalysisStatus] = mapped_column(SQLAlchemyEnum(AnalysisStatus), default=AnalysisStatus.PENDING)
     task_id: Mapped[str] = mapped_column(nullable=True)
