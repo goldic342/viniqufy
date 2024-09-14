@@ -8,9 +8,12 @@ from src.analysis.enums import AnalysisStatus
 from src.models import TaskResult, TaskInit
 
 
-class SPlaylistBase(BaseModel):
-    playlist_id: Optional[UUID] = None
+class SPlaylistCreate(BaseModel):
     spotify_playlist_id: str
+
+
+class SPlaylistBase(SPlaylistCreate):
+    playlist_id: Optional[UUID] = None
     current_snapshot_id: str
 
 
@@ -72,36 +75,36 @@ class SGenreBase(BaseModel):
 
 # Relationship schemas
 class SGenre(SGenreBase):
-    artists: list['SArtist'] = []
+    artists: list['SArtistBase'] = []
 
 
 class SArtist(SArtistBase):
-    genres: list[SGenre] = []
-    tracks: list['STrack'] = []
+    genres: list[SGenreBase] = []
+    tracks: list['STrackBase'] = []
 
 
 class STrackFeatures(STrackFeaturesBase):
-    track: 'STrack'
+    track: 'STrackBase'
 
 
 class STrack(STrackBase):
-    track_features: Optional[STrackFeatures] = None
-    artists: list[SArtist] = []
-    playlist_versions: list['SPlaylistVersion'] = []
+    track_features: Optional[STrackFeaturesBase] = None
+    artists: list[SArtistBase] = []
+    playlist_versions: list['SPlaylistVersionBase'] = []
 
 
 class SAnalysis(SAnalysisBase):
-    playlist_version: 'SPlaylistVersion'
+    playlist_version: 'SPlaylistVersionBase'
 
 
 class SPlaylistVersion(SPlaylistVersionBase):
-    playlist: 'SPlaylist'
-    analysis: Optional[SAnalysis] = None
-    tracks: list[STrack] = []
+    playlist: 'SPlaylistBase'
+    analysis: Optional[SAnalysisBase] = None
+    tracks: list[STrackBase] = []
 
 
 class SPlaylist(SPlaylistBase):
-    versions: list[SPlaylistVersion] = []
+    versions: list[SPlaylistVersionBase] = []
 
 
 # Update forward refs
