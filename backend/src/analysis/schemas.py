@@ -5,7 +5,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from src.analysis.enums import AnalysisStatus
-from src.analysis.models import Playlist
 from src.models import TaskResult, TaskInit
 
 
