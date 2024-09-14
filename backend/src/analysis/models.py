@@ -97,7 +97,7 @@ class Analysis(BaseTable):
 class Track(ExpireTable):
     __tablename__ = "track"
 
-    track_id: Mapped[str] = mapped_column(primary_key=True)
+    track_id: Mapped[str] = mapped_column(primary_key=True, unique=True)
     name: Mapped[str]
     release_date: Mapped[date]
     explicit: Mapped[bool]
@@ -120,7 +120,7 @@ class Track(ExpireTable):
 class TrackFeatures(BaseTable):
     __tablename__ = "track_features"
 
-    track_id: Mapped[str] = mapped_column(ForeignKey("track.track_id"), primary_key=True)
+    track_id: Mapped[str] = mapped_column(ForeignKey("track.track_id"), primary_key=True, unique=True)
 
     # Nullable = True because some all metrics not implemented yet
     dance_ability: Mapped[float] = mapped_column(nullable=True)
@@ -143,7 +143,7 @@ class TrackFeatures(BaseTable):
 class Artist(ExpireTable):
     __tablename__ = "artist"
 
-    artist_id: Mapped[str] = mapped_column(primary_key=True)
+    artist_id: Mapped[str] = mapped_column(primary_key=True, unique=True)
     name: Mapped[str]
     followers: Mapped[int]
     popularity: Mapped[int]
