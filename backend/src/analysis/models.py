@@ -8,8 +8,8 @@ from sqlalchemy.orm import mapped_column, Mapped, validates, relationship, decla
 from src.analysis.enums import AnalysisStatus
 from src.analysis.enums import Genre as GenreEnum
 from src.analysis.utils import validate_popularity
-from src.database import Base
 from src.config import settings
+from src.database import Base
 
 
 class BaseTable(Base):
@@ -31,7 +31,7 @@ artist_genre_association = Table(
     'artist_genre_association',
     Base.metadata,
     Column('artist_id', String, ForeignKey("artist.artist_id")),
-    Column('genre_id', String, ForeignKey("genre.genre_id")),
+    Column('genre_id', String, ForeignKey("genre.name")),
 )
 
 artist_track_association = Table(
@@ -71,6 +71,7 @@ class PlaylistVersion(BaseTable):
     owner_name: Mapped[str]
     owner_spotify_id: Mapped[str]
     followers: Mapped[int]
+    tracks_count: Mapped[int]
 
     playlist: Mapped["Playlist"] = relationship("Playlist", back_populates="versions")
     analysis: Mapped["Analysis"] = relationship("Analysis", back_populates="playlist_version", uselist=False)
@@ -148,7 +149,6 @@ class Artist(ExpireTable):
     popularity: Mapped[int]
 
     expires_after = settings.ARTIST_EXPIRY_DAYS
-
 
     genres: Mapped[list["Genre"]] = relationship('Genre', secondary=artist_genre_association, back_populates="artists")
     tracks: Mapped[list["Track"]] = relationship("Track", secondary=artist_track_association, back_populates="artists")
