@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from src.analysis.enums import AnalysisStatus
+from src.analysis.enums import AnalysisStatus, Genre
 from src.models import TaskResult, TaskInit
 
 
@@ -67,19 +67,10 @@ class SArtistBase(BaseModel):
     name: str
     followers: int
     popularity: int = Field(ge=0, le=100)
-
-
-class SGenreBase(BaseModel):
-    name: str
-
-
-# Relationship schemas
-class SGenre(SGenreBase):
-    artists: list['SArtistBase'] = []
+    genres: list[Genre]
 
 
 class SArtist(SArtistBase):
-    genres: list[SGenreBase] = []
     tracks: list['STrackBase'] = []
 
 
