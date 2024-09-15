@@ -5,7 +5,10 @@ class CustomHTTPException(HTTPException):
     """Base class for all custom HTTP exceptions."""
 
     def __init__(self, detail: str, status_code: int = 400, error_code='INTERNAL_ERROR'):
-        super().__init__(status_code=status_code, detail=detail)
+        super().__init__(status_code=status_code, detail={
+            'message': detail,
+            'error_code': error_code
+        })
         self.error_code = error_code
 
     def __str__(self):
