@@ -3,8 +3,9 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 
-from src.analysis.models import Track, TrackFeatures, Artist
-from src.analysis.schemas import STrack, STrackBase, STrackFeatures, SArtist, SArtistBase
+from src.analysis.models import Track, TrackFeatures, Artist, Playlist, PlaylistVersion
+from src.analysis.schemas import STrack, STrackBase, STrackFeatures, SArtist, SArtistBase, SPlaylist, SPlaylistBase, \
+    SPlaylistVersion
 from src.repository import BaseRepository
 
 
@@ -180,6 +181,92 @@ class TrackRepository(BaseRepository):
         return track_model.expires_at < datetime.utcnow()
 
 
+class PlaylistRepository(BaseRepository):
+
+    async def get(self, playlist_id: str) -> SPlaylist | None:
+        query = (
+            select(Playlist)
+            .options(selectinload(Playlist.versions))
+            .where(Playlist.spotify_id == playlist_id)
+        )
+
+        playlist_model = await self.session.execute(query)
+        playlist_scalar = playlist_model.scalar_one_or_none()
+
+        if not playlist_scalar:
+            return None
+
+        return Playlist.model_validate(playlist_scalar, from_attributes=True)
+
+    async def create(self, input_playlist: SPlaylist) -> SPlaylist:
+        playlist_model = Playlist(**input_playlist.model_dump())
+
+        self.session.add(playlist_model)
+        await self.session.flush()
+        await self.session.commit()
+
+        return SPlaylist.model_validate(playlist_model, from_attributes=True)
+
+    async def update(self, input_playlist: SPlaylistBase) -> SPlaylistBase:
+        """
+        Updating playlist attributes without relationships
+        :param input_playlist:
+        :return:
+        """
+        playlist_model = await self.session.get(Playlist, input_playlist.playlist_id)
+
+        for key, value in input_playlist.model_dump().items():
+            setattr(playlist_model, key, value)
+
+        await self.session.flush()
+        await self.session.commit()
+        return SPlaylistBase.model_validate(playlist_model, from_attributes=True)
+
+    async def add_version(self, playlist_id: str, version_input: SPlaylistVersion) -> SPlaylistVersion | None:
+        playlist_model = await self.session.get(Playlist, playlist_id)
+
+        if not playlist_model:
+            return None
+
+        version_model = PlaylistVersion(**version_input.model_dump())
+
+        playlist_model.versions.append(version_model)
+        await self.session.flush()
+        await self.session.commit()
+        return SPlaylistVersion.model_validate(version_model, from_attributes=True)
+
+
+class PlaylistVersionRepository(BaseRepository):
+
+    async def get(self, playlist_version_id: str) -> SPlaylistVersion | None:
+        query = (
+            select(PlaylistVersion)
+            .options(joinedload(PlaylistVersion.playlist))
+            .options(selectinload(PlaylistVersion.tracks))
+            .options(joinedload(PlaylistVersion.analysis))
+            .where(PlaylistVersion.playlist_version_id == playlist_version_id)
+        )
+
+        playlist_version_model = await self.session.execute(query)
+        playlist_version_scalar = playlist_version_model.scalar_one_or_none()
+
+        if not playlist_version_scalar:
+            return None
+
+        return SPlaylistVersion.model_validate(playlist_version_scalar, from_attributes=True)
+
+    async def create(self, input_playlist_version: SPlaylistVersion) -> SPlaylistVersion:
+        playlist_version_model = PlaylistVersion(**input_playlist_version.model_dump())
+
+        self.session.add(playlist_version_model)
+        await self.session.flush()
+        await self.session.commit()
+
+        return SPlaylistVersion.model_validate(playlist_version_model, from_attributes=True)
+
+
 tracks = TrackRepository()
 track_features = TrackFeaturesRepository()
 artists = ArtistsRepository()
+playlists = PlaylistRepository()
+playlist_versions = PlaylistVersionRepository()
