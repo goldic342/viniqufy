@@ -5,7 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 class BaseRepository:
 
     def __init__(self):
-        self.session: AsyncSession = db.session
+        self._db = db
+
+    @property
+    def session(self) -> AsyncSession:
+        return self._db.session
 
     async def get(self, *args, **kwargs):
         raise NotImplementedError
