@@ -30,22 +30,22 @@ class ExpireTable(BaseTable):
 artist_genre_association = Table(
     'artist_genre_association',
     Base.metadata,
-    Column('artist_id', String, ForeignKey("artist.artist_id")),
-    Column('genre_id', String, ForeignKey("genre.name")),
+    Column('artist_id', String, ForeignKey("artist.artist_id", ondelete='CASCADE')),
+    Column('genre_id', String, ForeignKey("genre.name", ondelete='CASCADE')),
 )
 
 artist_track_association = Table(
     'artist_track_association',
     Base.metadata,
-    Column('artist_id', String, ForeignKey("artist.artist_id")),
-    Column('track_id', String, ForeignKey("track.track_id")),
+    Column('artist_id', String, ForeignKey("artist.artist_id", ondelete='CASCADE')),
+    Column('track_id', String, ForeignKey("track.track_id", ondelete='CASCADE')),
 )
 
 playlist_track_association = Table(
     'playlist_track_association',
     Base.metadata,
-    Column('playlist_version_id', SQLALCHEMY_UUID, ForeignKey("playlist_version.version_id")),
-    Column('track_id', String, ForeignKey("track.track_id")),
+    Column('playlist_version_id', SQLALCHEMY_UUID, ForeignKey("playlist_version.version_id", ondelete='CASCADE')),
+    Column('track_id', String, ForeignKey("track.track_id", ondelete='CASCADE')),
 )
 
 
@@ -64,7 +64,7 @@ class PlaylistVersion(BaseTable):
     __tablename__ = "playlist_version"
 
     version_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, unique=True)
-    playlist_id: Mapped[UUID] = mapped_column(ForeignKey("playlist.playlist_id"))
+    playlist_id: Mapped[UUID] = mapped_column(ForeignKey("playlist.playlist_id", ondelete="CASCADE"))
     snapshot_id: Mapped[str] = mapped_column(unique=True)
     name: Mapped[str]
     description: Mapped[str]
@@ -83,7 +83,7 @@ class Analysis(BaseTable):
     __tablename__ = "analysis"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, unique=True)
-    playlist_version_id: Mapped[UUID] = mapped_column(ForeignKey("playlist_version.version_id"))
+    playlist_version_id: Mapped[UUID] = mapped_column(ForeignKey("playlist_version.version_id", ondelete="CASCADE"))
     status: Mapped[AnalysisStatus] = mapped_column(SQLAlchemyEnum(AnalysisStatus), default=AnalysisStatus.PENDING)
     task_id: Mapped[str] = mapped_column(nullable=True)
 
@@ -120,7 +120,7 @@ class Track(ExpireTable):
 class TrackFeatures(BaseTable):
     __tablename__ = "track_features"
 
-    track_id: Mapped[str] = mapped_column(ForeignKey("track.track_id"), primary_key=True, unique=True)
+    track_id: Mapped[str] = mapped_column(ForeignKey("track.track_id", ondelete="CASCADE"), primary_key=True, unique=True)
 
     # Nullable = True because some all metrics not implemented yet
     dance_ability: Mapped[float] = mapped_column(nullable=True)
