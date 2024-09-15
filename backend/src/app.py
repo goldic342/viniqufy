@@ -21,7 +21,7 @@ app.add_middleware(
     SQLAlchemyMiddleware,
     db_url=str(settings.ASYNC_DATABASE_URI),
     engine_args={
-        "echo": True,
+        "echo": settings.DEBUG_MODE,
         'pool_size': 5,
         "max_overflow": 10
     }
