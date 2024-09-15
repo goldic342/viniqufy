@@ -10,6 +10,7 @@ class AnalysisStatus(Enum):
 
 
 class Genre(Enum):
+    UNKNOWN = 'unknown'  # Genres may change, if genre not in Enum set unknown
     ACOUSTIC = "acoustic"
     AFROBEAT = "afrobeat"
     ALT_ROCK = "alt-rock"

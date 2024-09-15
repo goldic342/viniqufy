@@ -2,8 +2,9 @@ from datetime import date, datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import text, ForeignKey, Table, Column, String, Enum as SQLAlchemyEnum, UUID as SQLALCHEMY_UUID, \
-    DateTime
+    DateTime, Enum
 from sqlalchemy.orm import mapped_column, Mapped, validates, relationship, declared_attr
+from sqlalchemy.dialects.postgresql import ARRAY
 
 from src.analysis.enums import AnalysisStatus
 from src.analysis.enums import Genre as GenreEnum
@@ -27,13 +28,6 @@ class ExpireTable(BaseTable):
 
 
 # Association tables
-artist_genre_association = Table(
-    'artist_genre_association',
-    Base.metadata,
-    Column('artist_id', String, ForeignKey("artist.artist_id")),
-    Column('genre_id', String, ForeignKey("genre.name")),
-)
-
 artist_track_association = Table(
     'artist_track_association',
     Base.metadata,
@@ -158,27 +152,12 @@ class Artist(ExpireTable):
     name: Mapped[str]
     followers: Mapped[int]
     popularity: Mapped[int]
+    genres: Mapped[list[GenreEnum]] = mapped_column(ARRAY(Enum(GenreEnum)), nullable=False)
 
     expires_after = settings.ARTIST_EXPIRY_DAYS
 
-    genres: Mapped[list["Genre"]] = relationship('Genre', secondary=artist_genre_association, back_populates="artists",
-                                                 cascade='all, delete')
     tracks: Mapped[list["Track"]] = relationship("Track", secondary=artist_track_association, back_populates="artists")
 
     @validates('popularity')
     def validate_popularity(self, key, value):
         return validate_popularity(value)
-
-
-class Genre(Base):
-    __tablename__ = 'genre'
-
-    name: Mapped[str] = mapped_column(primary_key=True, unique=True)
-    artists: Mapped[list["Artist"]] = relationship("Artist", secondary=artist_genre_association,
-                                                   back_populates="genres")
-
-    @validates('name')
-    def validate_value(self, key, name):
-        if not (name in [genre.value for genre in GenreEnum] or isinstance(name, str)):
-            raise ValueError(f"Value must be one of {GenreEnum} or any string")
-        return name
