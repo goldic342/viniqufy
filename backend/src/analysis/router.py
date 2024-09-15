@@ -18,13 +18,13 @@ async def start_analysis(playlist: SPlaylistCreate):
     if not validate_spotify_id(playlist.spotify_playlist_id):
         raise InvalidSpotifyId(playlist.spotify_playlist_id)
 
-    task = analyse_playlist.delay(playlist)
-    task_id = encode_uuid(task.task_id)  # base-64 task-id (only for better look of id on frontend)
+    # task = analyse_playlist.delay(playlist)
+    # task_id = encode_uuid(task.task_id)  # base-64 task-id (only for better look of id on frontend)
 
     async with AnalysisService() as spotify:
-        playlist_info = await spotify.playlist_info(playlist.spotify_id)
+        playlist_info = await spotify.playlist_info(playlist.spotify_playlist_id)
 
-    return AnalysisTaskInit(task_id=task_id, info=playlist_info)
+    return AnalysisTaskInit(task_id='test', info=playlist_info)
 
 
 # PyCharm only ↓ because of celery.status return Any

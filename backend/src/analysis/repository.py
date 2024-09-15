@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from src.analysis.models import Track, TrackFeatures, Artist, Playlist, PlaylistVersion
 from src.analysis.schemas import STrack, STrackBase, STrackFeatures, SArtist, SArtistBase, SPlaylist, SPlaylistBase, \
-    SPlaylistVersion
+    SPlaylistVersion, SPlaylistVersionBase
 from src.repository import BaseRepository
 
 
@@ -187,7 +187,7 @@ class PlaylistRepository(BaseRepository):
         query = (
             select(Playlist)
             .options(selectinload(Playlist.versions))
-            .where(Playlist.spotify_id == playlist_id)
+            .where(Playlist.spotify_playlist_id == playlist_id)
         )
 
         playlist_model = await self.session.execute(query)
@@ -196,7 +196,7 @@ class PlaylistRepository(BaseRepository):
         if not playlist_scalar:
             return None
 
-        return Playlist.model_validate(playlist_scalar, from_attributes=True)
+        return SPlaylist.model_validate(playlist_scalar, from_attributes=True)
 
     async def create(self, input_playlist: SPlaylist) -> SPlaylist:
         playlist_model = Playlist(**input_playlist.model_dump())
@@ -238,13 +238,13 @@ class PlaylistRepository(BaseRepository):
 
 class PlaylistVersionRepository(BaseRepository):
 
-    async def get(self, playlist_version_id: str) -> SPlaylistVersion | None:
+    async def get(self, playlist__id: str) -> SPlaylistVersion | None:
         query = (
             select(PlaylistVersion)
             .options(joinedload(PlaylistVersion.playlist))
             .options(selectinload(PlaylistVersion.tracks))
             .options(joinedload(PlaylistVersion.analysis))
-            .where(PlaylistVersion.playlist_version_id == playlist_version_id)
+            .where(PlaylistVersion.playlist_id == playlist__id)
         )
 
         playlist_version_model = await self.session.execute(query)
@@ -255,14 +255,14 @@ class PlaylistVersionRepository(BaseRepository):
 
         return SPlaylistVersion.model_validate(playlist_version_scalar, from_attributes=True)
 
-    async def create(self, input_playlist_version: SPlaylistVersion) -> SPlaylistVersion:
+    async def create(self, input_playlist_version: SPlaylistVersionBase) -> SPlaylistVersionBase:
         playlist_version_model = PlaylistVersion(**input_playlist_version.model_dump())
 
         self.session.add(playlist_version_model)
         await self.session.flush()
         await self.session.commit()
 
-        return SPlaylistVersion.model_validate(playlist_version_model, from_attributes=True)
+        return SPlaylistVersionBase.model_validate(playlist_version_model, from_attributes=True)
 
 
 tracks = TrackRepository()

@@ -107,6 +107,29 @@ class SPlaylist(SPlaylistBase):
     versions: list[SPlaylistVersionBase] = []
 
 
+class SPlaylistInfo(BaseModel):
+    """
+    SPlaylistInfo used in fronted as playlist info. Not recommended to use as a model for operations
+    """
+    image_url: str
+    spotify_playlist_id: str
+    snapshot_id: str
+    name: str
+    description: str
+    owner_name: str
+    owner_spotify_id: str
+    followers: int
+    tracks_count: int
+
+    @classmethod
+    def from_base_and_version(cls, base: SPlaylistBase | SPlaylist, version: SPlaylistVersionBase,
+                              image_url: str) -> 'SPlaylistInfo':
+        combined_dict = {**base.dict(), **version.dict(), "image_url": image_url}
+
+        # Creating new instance
+        return cls(**combined_dict)
+
+
 # Update forward refs
 STrack.update_forward_refs()
 SPlaylistVersion.update_forward_refs()
@@ -119,4 +142,4 @@ class AnalysisTaskResult(TaskResult):
 
 
 class AnalysisTaskInit(TaskInit):
-    info: SPlaylist
+    info: 'SPlaylistInfo'

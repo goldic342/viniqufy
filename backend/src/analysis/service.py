@@ -6,21 +6,32 @@ import numpy as np
 from aiohttp import ClientSession
 from scipy.stats import entropy
 
-from src.config import settings
 from src.analysis.config import analysis_settings
-from src.analysis.schemas import PlaylistIdInput, SpotifyTrack, Artist, TrackAnalysis, Playlist
+from src.analysis.repository import playlists, playlist_versions
+from src.analysis.schemas import SPlaylistCreate, SArtist, STrackFeatures, STrack, SPlaylist, SPlaylistVersionBase, \
+    SPlaylistInfo
+from src.config import settings
+from src.exceptions import CustomHTTPException
 
 
 class AnalysisService:
     # TODO: Add token caching, so all instances of class have the same token
     API_URL = 'https://api.spotify.com/v1'
-    access_token = None
-    access_token_creation = None
+    _access_token = None
+    _access_token_creation = None
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self, client_id: str = settings.SPOTIFY_CLIENT_ID,
                  client_secret: str = settings.SPOTIFY_CLIENT_SECRET):
-        self.client_id = client_id
-        self.client_secret = client_secret
+        if not hasattr(self, 'initialized'):
+            self.client_id = client_id
+            self.client_secret = client_secret
+            self.initialized = True
 
     async def __aenter__(self):
         self.session = ClientSession()
@@ -29,47 +40,47 @@ class AnalysisService:
     async def __aexit__(self, exc_type, exc, tb):
         await self.session.close()
 
-    async def get_uniqueness(self, playlist: PlaylistIdInput) -> float:
+    async def get_uniqueness(self, playlist: SPlaylistCreate) -> float:
         tracks = await self.__playlist_tracks(playlist.spotify_id)
         artists = list(chain.from_iterable(track.artists for track in tracks))
 
         return self.__calculate_uniqueness(tracks, artists, analysis_settings.weights)
 
-    async def __set_access_token(self) -> None:
+    @classmethod
+    async def __set_access_token(cls) -> None:
         """
         Sets the access token and its expiry time.
         """
-        response = await self.session.post(
-            'https://accounts.spotify.com/api/token',
-            headers={
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            data={
-                'grant_type': 'client_credentials',
-                'client_id': self.client_id,
-                'client_secret': self.client_secret,
-            }
-        )
+        async with ClientSession() as session:
+            response = await session.post(
+                'https://accounts.spotify.com/api/token',
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                data={
+                    'grant_type': 'client_credentials',
+                    'client_id': cls._instance.client_id,
+                    'client_secret': cls._instance.client_secret,
+                }
+            )
+            if response.status != 200:
+                raise Exception(f'Failed to get access token. Response status code: {response.status})')
+            response_json = await response.json()
+            cls._access_token = response_json['access_token']
+            cls._access_token_creation = datetime.now()
 
-        if response.status != 200:
-            raise Exception(f'Failed to get access token. Response status code: {response.status})')
-
-        response_json = await response.json()
-
-        self.access_token = response_json['access_token']
-        self.access_token_creation = datetime.now()
-
-    async def __make_auth_headers(self) -> dict:
+    @classmethod
+    async def __make_auth_headers(cls) -> dict:
         """
         Creates the authentication headers for the Spotify API.
         If token is expired, it will refresh it.
         :return: Headers with authentication
         """
-        if not self.access_token or datetime.now() - self.access_token_creation > timedelta(hours=1):
-            await self.__set_access_token()
-
+        if not cls._access_token or (datetime.now() - cls._access_token_creation > timedelta(hours=1)):
+            print('Token expired, refreshing...')
+            await cls.__set_access_token()
         return {
-            'Authorization': f"Bearer {self.access_token}"
+            'Authorization': f"Bearer {cls._access_token}"
         }
 
     async def __get(self, sub_url: str):
@@ -78,7 +89,6 @@ class AnalysisService:
         :param sub_url: Url that follows afters https://api.spotify.com/v1
         :return: response json
         """
-
         if not sub_url.startswith('/'):
             raise ValueError('sub_url must start with /')
 
@@ -88,7 +98,12 @@ class AnalysisService:
         if response.status == 429:
             await asyncio.sleep(analysis_settings.rate_limit_wait)
             return await self.__get(sub_url)
-
+        elif response.status == 404:
+            raise CustomHTTPException('Spotify resource not found', status_code=404,
+                                      error_code='SPOTIFY_RESOURCE_NOT_FOUND')
+        elif response.status == 500:
+            raise CustomHTTPException('Internal spotify server error', status_code=500,
+                                      error_code='INTERNAL_SPOTIFY_ERROR')
         return await response.json()
 
     @staticmethod
@@ -101,7 +116,7 @@ class AnalysisService:
 
         return grouped_items
 
-    async def __parse_artists(self, artists_ids: list[str]) -> dict[str, Artist]:
+    async def __parse_artists(self, artists_ids: list[str]) -> dict[str, SArtist]:
         unique_artists = list(set(artists_ids))
 
         # Count the number of occurrences of each artist
@@ -122,11 +137,13 @@ class AnalysisService:
                 artist_id = artist['id']
 
                 spotify_artist = (
-                    Artist(
+                    SArtist(
                         name=artist['name'],
-                        spotify_id=artist_id,
+                        artist_id=artist_id,
+                        # FIXME: HERE
                         genres=artist['genres'],
                         popularity=artist['popularity'],
+                        followers=artist['followers']['total']
                     )
                 )
 
@@ -136,7 +153,7 @@ class AnalysisService:
 
         return artists
 
-    async def __parse_audio_analysis(self, tracks_ids_groups: list[str]) -> dict[str, TrackAnalysis]:
+    async def __parse_audio_analysis(self, tracks_ids_groups: list[str]) -> dict[str, STrackFeatures]:
         audio_analysis = {}
 
         for group in tracks_ids_groups:
@@ -144,9 +161,9 @@ class AnalysisService:
 
             for track_features in response['audio_features']:
                 audio_analysis[track_features['id']] = (
-                    TrackAnalysis(
-                        spotify_id=track_features['id'],
-                        duration=track_features['duration_ms'],
+                    STrackFeatures(
+                        track_id=track_features['id'],
+                        duration_ms=track_features['duration_ms'],
                         loudness=track_features['loudness'],
                         dance_ability=track_features['danceability'],
                         energy=track_features['energy'],
@@ -154,18 +171,19 @@ class AnalysisService:
                         mode=track_features['mode'],
                         tempo=track_features['tempo'],
                         valence=track_features['valence']
+                        # TODO: Add more params here
                     )
                 )
 
         return audio_analysis
 
-    async def __parse_tracks(self, tracks: dict, ) -> list[SpotifyTrack]:
+    async def __parse_tracks(self, tracks: dict, ) -> list[STrack]:
         """
         Parse tracks json, loads additional data such as artist info, audio analysis and then convert to pydantic schema
         :param tracks: Raw tracks json (dict)
         :return: List of tracks as pydantic model, modified artist list and audio analysis list
         """
-        result: list[SpotifyTrack] = []
+        result: list[STrack] = []
         artists_ids = []
         tracks_ids = []
 
@@ -192,21 +210,23 @@ class AnalysisService:
                 continue
 
             track_id = track['id']
+            track_date_str = track['album']['release_date']
 
             result.append(
-                SpotifyTrack(
+                STrack(
                     name=track['name'],
-                    spotify_id=track_id,
+                    track_id=track_id,
                     artists=[artists[artist['id']] for artist in track['artists']],
                     popularity=track['popularity'],
-                    analysis=analysis[track_id],
-                    release_year=track['album']['release_date'][:4]
+                    track_features=analysis[track_id],
+                    explicit=track['explicit'],
+                    release_date=datetime.strptime(track_date_str, '%Y-%m-%d').date()
                 )
             )
 
         return result
 
-    async def __playlist_tracks(self, playlist_id: str, limit: int = 100) -> list[SpotifyTrack]:
+    async def __playlist_tracks(self, playlist_id: str, limit: int = 100) -> list[STrack]:
         tracks = []
         current_url = f'/playlists/{playlist_id}/tracks?limit={limit}'
 
@@ -223,26 +243,56 @@ class AnalysisService:
 
         return tracks
 
-    async def playlist_info(self, playlist_id: str):
-        playlist_info = await self.__get(f'/playlists/{playlist_id}')
-
-        return Playlist(
+    @staticmethod
+    async def __create_playlist_version(playlist_info: dict, playlist: SPlaylist, image_url: str) -> SPlaylistInfo:
+        playlist_version = await playlist_versions.create(SPlaylistVersionBase(
+            playlist_id=playlist.playlist_id,
+            snapshot_id=playlist_info['snapshot_id'],
             name=playlist_info['name'],
-            spotify_id=playlist_info['id'],
             description=playlist_info['description'],
+            owner_name=playlist_info['owner']['display_name'],
+            owner_spotify_id=playlist_info['owner']['id'],
+            followers=playlist_info['followers']['total'],
             tracks_count=playlist_info['tracks']['total'],
-            image_url=playlist_info['images'][0]['url'],
-            owner=playlist_info['owner']['display_name']
-        )
+        ))
+
+        return SPlaylistInfo.from_base_and_version(playlist, playlist_version, image_url=image_url)
+
+    async def playlist_info(self, playlist_id: str):
+        playlist = await playlists.get(playlist_id)
+
+        # Fields param added for reducing response time, tracks not needed
+        playlist_info = await self.__get(
+            f'/playlists/{playlist_id}?fields=snapshot_id,name,description,owner,followers,tracks(total),images')
+
+        snapshot_id = playlist_info['snapshot_id']
+        image_url = playlist_info['images'][0]['url']
+
+        if playlist:
+            if playlist.current_snapshot_id != snapshot_id:
+                playlist_version = await self.__create_playlist_version(playlist_info, playlist, image_url)
+                return playlist_version
+            else:
+                playlist_version = await playlist_versions.get(playlist.playlist_id)
+                return SPlaylistInfo.from_base_and_version(playlist, playlist_version, image_url=image_url)
+
+        playlist = await playlists.create(SPlaylist(
+            spotify_playlist_id=playlist_id,
+            current_snapshot_id=snapshot_id
+        ))
+
+        playlist_version = await self.__create_playlist_version(playlist_info, playlist, image_url)
+
+        return playlist_version
 
     async def __track_info(self, track_id: str):
         return await self.__get(f'/tracks/{track_id}')
 
     async def __track_audio_analysis(self, track_id: str):
         response = await self.__get(f'/audio-features/{track_id}')
-        return TrackAnalysis(
-            spotify_id=track_id,
-            duration=response['duration_ms'],
+        return STrackFeatures(
+            track_id=track_id,
+            duration_ms=response['duration_ms'],
             loudness=response['loudness'],
             dance_ability=response['danceability'],
             energy=response['energy'],
@@ -299,7 +349,7 @@ class AnalysisService:
 
         return uniqueness_score
 
-    def __calculate_uniqueness(self, tracks: list[SpotifyTrack], artists: list[Artist],
+    def __calculate_uniqueness(self, tracks: list[STrack], artists: list[SArtist],
                                weights: dict[str, int]) -> float:
         """
         Calculates the uniqueness of a playlist based on the popularity of tracks, artists, variety of genres,
