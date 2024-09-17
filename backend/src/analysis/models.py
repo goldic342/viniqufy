@@ -3,8 +3,8 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import text, ForeignKey, Table, Column, String, Enum as SQLAlchemyEnum, UUID as SQLALCHEMY_UUID, \
     DateTime, Enum
-from sqlalchemy.orm import mapped_column, Mapped, validates, relationship, declared_attr
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import mapped_column, Mapped, validates, relationship, declared_attr
 
 from src.analysis.enums import AnalysisStatus
 from src.analysis.enums import Genre as GenreEnum
@@ -20,11 +20,14 @@ class BaseTable(Base):
 
 class ExpireTable(BaseTable):
     __abstract__ = True
-    updated_at: Mapped[datetime] = mapped_column(onupdate=text("TIMEZONE('utc', now())"))
+    updated_at: Mapped[datetime] = mapped_column(
+        default=datetime.utcnow(),  # for some reason server_default doesn't work
+        server_default=text("TIMEZONE('utc', now())"),
+        onupdate=text("TIMEZONE('utc', now())"))
 
     @declared_attr
     def expires_at(self) -> Mapped[datetime]:
-        return mapped_column(DateTime, default=lambda: datetime.now() + timedelta(days=self.expiers_after))
+        return mapped_column(DateTime, default=lambda: datetime.now() + timedelta(days=self.expires_after))
 
 
 # Association tables
