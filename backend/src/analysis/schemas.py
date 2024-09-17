@@ -33,7 +33,12 @@ class SAnalysisBase(BaseModel):
     id: Optional[UUID] = None
     playlist_version_id: UUID
     status: AnalysisStatus
-    task_id: Optional[str] = None
+    task_id: UUID = None
+    uniqueness: Optional[float] = None
+
+
+class SAnalysisUpdate(BaseModel):
+    status: Optional[AnalysisStatus] = None
     uniqueness: Optional[float] = None
 
 

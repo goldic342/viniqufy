@@ -88,7 +88,7 @@ class Analysis(BaseTable):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, unique=True)
     playlist_version_id: Mapped[UUID] = mapped_column(ForeignKey("playlist_version.version_id", ondelete="CASCADE"))
     status: Mapped[AnalysisStatus] = mapped_column(SQLAlchemyEnum(AnalysisStatus), default=AnalysisStatus.PENDING)
-    task_id: Mapped[str] = mapped_column(nullable=True)
+    task_id: Mapped[UUID] = mapped_column(nullable=True)  # TODO: set nullable=False
 
     # Analysis data (nullable for pending analysis)
     uniqueness: Mapped[float] = mapped_column(nullable=True)
