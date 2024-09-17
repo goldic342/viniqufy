@@ -21,7 +21,6 @@ class BaseTable(Base):
 class ExpireTable(BaseTable):
     __abstract__ = True
     updated_at: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),  # for some reason server_default doesn't work
         server_default=text("TIMEZONE('utc', now())"),
         onupdate=text("TIMEZONE('utc', now())"))
 
@@ -34,15 +33,16 @@ class ExpireTable(BaseTable):
 artist_track_association = Table(
     'artist_track_association',
     Base.metadata,
-    Column('artist_id', String, ForeignKey("artist.artist_id")),
-    Column('track_id', String, ForeignKey("track.track_id")),
+    Column('artist_id', String, ForeignKey("artist.artist_id", ondelete='CASCADE', name='artist_id')),
+    Column('track_id', String, ForeignKey("track.track_id", ondelete='CASCADE', name="track_id")),
 )
 
 playlist_track_association = Table(
     'playlist_track_association',
     Base.metadata,
-    Column('playlist_version_id', SQLALCHEMY_UUID, ForeignKey("playlist_version.version_id")),
-    Column('track_id', String, ForeignKey("track.track_id")),
+    Column('playlist_version_id', SQLALCHEMY_UUID,
+           ForeignKey("playlist_version.version_id", ondelete="CASCADE", name="playlist_version_id")),
+    Column('track_id', String, ForeignKey("track.track_id", ondelete="CASCADE", name="track_id_playlist")),
 )
 
 
@@ -78,7 +78,7 @@ class PlaylistVersion(BaseTable):
     tracks: Mapped[list["Track"]] = relationship("Track",
                                                  secondary=playlist_track_association,
                                                  back_populates="playlist_versions",
-                                                 cascade='all, delete'
+                                                 cascade='all'
                                                  )
 
 
@@ -112,11 +112,12 @@ class Track(ExpireTable):
     artists: Mapped[list["Artist"]] = relationship("Artist",
                                                    secondary=artist_track_association,
                                                    back_populates='tracks',
-                                                   cascade='all, delete'
+                                                   cascade='all'
                                                    )
     playlist_versions: Mapped[list["PlaylistVersion"]] = relationship("PlaylistVersion",
                                                                       secondary=playlist_track_association,
                                                                       back_populates="tracks",
+                                                                      cascade='all'
                                                                       )
 
     @validates('popularity')
@@ -159,7 +160,8 @@ class Artist(ExpireTable):
 
     expires_after = settings.ARTIST_EXPIRY_DAYS
 
-    tracks: Mapped[list["Track"]] = relationship("Track", secondary=artist_track_association, back_populates="artists")
+    tracks: Mapped[list["Track"]] = relationship("Track", secondary=artist_track_association, back_populates="artists",
+                                                 cascade='all')
 
     @validates('popularity')
     def validate_popularity(self, key, value):
