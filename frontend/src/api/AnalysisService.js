@@ -36,7 +36,7 @@ export default class AnalysisService {
 
   async startAnalysis(spotifyId) {
     const response = await axios.post(`${this.apiBaseUrl}/analysis/start`, {
-      spotify_id: spotifyId,
+      spotify_playlist_id: spotifyId,
     });
 
     if (response.status !== 200) {
@@ -53,7 +53,7 @@ export default class AnalysisService {
           const taskStatus = await this.getAnalysisStatus(taskId);
 
           // If task is completed, then resolve
-          if (taskStatus && taskStatus.status === "completed") {
+          if (taskStatus && taskStatus.status === "SUCCESS") {
             clearInterval(intervalId);
             resolve(taskId);
           }
