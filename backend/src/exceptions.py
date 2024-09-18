@@ -38,6 +38,12 @@ class TaskNotCompleted(TaskException):
         detail = "Task not completed yet"
         super().__init__(task_id, detail, error_code='NOT_COMPLETED', status_code=400)
 
-# NOTE: In celery there is no implementation of `not found task`
+
+# NOTE: In celery vanilla there is no implementation of `not found task`,
+# but we can use task from db (Analysis) to raise such error
 # None of these solutions work properly: https://stackoverflow.com/questions/9824172/find-out-whether-celery-task-exists
 # See this issues on github: https://github.com/celery/celery/issues/3596
+class TaskNotFound(TaskException):
+    def __init__(self, task_id: str):
+        detail = "Task not found"
+        super().__init__(task_id, detail, error_code='NOT_FOUND', status_code=404)
