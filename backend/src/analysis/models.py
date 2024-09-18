@@ -2,12 +2,11 @@ from datetime import date, datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import text, ForeignKey, Table, Column, String, Enum as SQLAlchemyEnum, UUID as SQLALCHEMY_UUID, \
-    DateTime, Enum
+    DateTime
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import mapped_column, Mapped, validates, relationship, declared_attr
 
 from src.analysis.enums import AnalysisStatus
-from src.analysis.enums import Genre as GenreEnum
 from src.analysis.utils import validate_popularity
 from src.config import settings
 from src.database import Base
@@ -162,7 +161,7 @@ class Artist(ExpireTable):
     name: Mapped[str]
     followers: Mapped[int]
     popularity: Mapped[int]
-    genres: Mapped[list[GenreEnum]] = mapped_column(ARRAY(Enum(GenreEnum)), nullable=False)
+    genres: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=True)
 
     expires_after = settings.ARTIST_EXPIRY_DAYS
 
