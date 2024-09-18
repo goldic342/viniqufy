@@ -5,7 +5,6 @@ import LogoItem from "../components/UI/LogoItem";
 import FastAPILogo from "../assets/FastAPI.svg";
 import ChakraUILogo from "../assets/Chakra-UI.svg";
 import SpotifyLogo from "../assets/Spotify.svg";
-import IsHostingLogo from "../assets/is-hosting.svg";
 import ReactLogo from "../assets/React.svg";
 import ChakraRouterLink from "../components/ChakraRouterLink";
 
@@ -42,7 +41,6 @@ const HomePage = () => {
         Viniqufy tech tack and services
       </Text>
       <Flex mb={10} justify={"center"} align={"center"} gap={"24px"} wrap={"wrap"}>
-        <LogoItem src={IsHostingLogo} href={"https://ishosting.com"} alt="is*hosting" />
         <LogoItem src={FastAPILogo} href={"https://fastapi.tiangolo.com"} alt="FastAPI" />
         <LogoItem src={ChakraUILogo} href={"https://v2.chakra-ui.com/"} alt="Chakra UI" />
         <LogoItem src={SpotifyLogo} href={"https://developer.spotify.com/"} alt="Spotify" />

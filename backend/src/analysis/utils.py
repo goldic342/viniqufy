@@ -69,3 +69,9 @@ def decode_uuid(base64_str: str) -> str:
     uuid_obj = UUID(bytes=uuid_bytes)
 
     return str(uuid_obj)
+
+
+def validate_popularity(value: int) -> int:
+    if not (0 <= value <= 100):
+        raise ValueError("Popularity must be between 0 and 100")
+    return value
