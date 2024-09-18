@@ -1,3 +1,4 @@
+from os import path
 from typing import Any
 
 from pydantic import PostgresDsn, field_validator
@@ -35,7 +36,8 @@ class Settings(BaseSettings):
     TRACK_EXPIRY_DAYS: int = 7
     ARTIST_EXPIRY_DAYS: int = 7
 
-    model_config = SettingsConfigDict(case_sensitive=True, env_file=".env")
+    # It is assumed that fastAPI will be launched either from the root directory of the project or from the ./backend
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=".env" if path.exists(".env") else './backend/.env')
 
 
 class CeleryConfig:
@@ -49,7 +51,7 @@ class CeleryConfig:
     result_accept_content = ["application/json", "application/x-python-serialize"]
 
     imports = ('src.analysis.tasks',)
-    
+
     task_annotations = {
         'src.analysis.tasks': {'rate_limit': '100/m'}
     }
@@ -57,6 +59,7 @@ class CeleryConfig:
     # Celery 6.0+ specific configuration
     broker_connection_retry_on_startup = True
 
+    # Add CREATED property to task status
     task_track_started = True
 
 
