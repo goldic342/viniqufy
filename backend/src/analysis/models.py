@@ -86,15 +86,21 @@ class Analysis(BaseTable):
     __tablename__ = "analysis"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, unique=True)
-    playlist_version_id: Mapped[UUID] = mapped_column(ForeignKey("playlist_version.version_id", ondelete="CASCADE"))
+    playlist_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey(
+            "playlist_version.version_id",
+            ondelete="CASCADE"),
+        unique=True)
     status: Mapped[AnalysisStatus] = mapped_column(SQLAlchemyEnum(AnalysisStatus), default=AnalysisStatus.PENDING)
-    task_id: Mapped[UUID] = mapped_column(nullable=True)  # TODO: set nullable=False
+    task_id: Mapped[UUID] = mapped_column(nullable=False)
 
     # Analysis data (nullable for pending analysis)
     uniqueness: Mapped[float] = mapped_column(nullable=True)
     # Other metrics will be added later
 
-    playlist_version: Mapped["PlaylistVersion"] = relationship("PlaylistVersion", back_populates="analysis")
+    playlist_version: Mapped["PlaylistVersion"] = relationship("PlaylistVersion",
+                                                               back_populates="analysis",
+                                                               single_parent=True)
 
 
 class Track(ExpireTable):
