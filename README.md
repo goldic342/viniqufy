@@ -3,6 +3,9 @@
 \
 Viniqufy is a web application that allows users to determine how unique their playlist is. By analyzing your playlist's content, Viniqufy provides insights into the diversity and rarity of the tracks you listen to.
 
+# Migration
+This repository has been migrated to [codeberg](https://codeberg.org/goldic/viniqufy)
+
 ## Table of Contents
 
 - [Features](#features)
