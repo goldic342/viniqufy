@@ -1,4 +1,5 @@
 from os import path
+from pathlib import Path
 from typing import Any
 
 from pydantic import PostgresDsn, field_validator
@@ -7,7 +8,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    DEBUG_MODE: bool = False
+    IS_PROD: bool = True
+
+    DATA_DIR: Path = Path("./data")
+    LOG_DIR: Path = DATA_DIR / "logs"
+
+    ORIGINS: str = "http://localhost:5173"
 
     SPOTIFY_CLIENT_ID: str
     SPOTIFY_CLIENT_SECRET: str
@@ -19,7 +25,7 @@ class Settings(BaseSettings):
     DATABASE_NAME: str
     DATABASE_URI: PostgresDsn | str = ""
 
-    @field_validator("ASYNC_DATABASE_URI", mode="after")
+    @field_validator("DATABASE_URI", mode="after")
     def assemble_db_connection(cls, v: str | None, info: FieldValidationInfo) -> Any:
         if isinstance(v, str):
             if v == "":
@@ -36,10 +42,9 @@ class Settings(BaseSettings):
     TRACK_EXPIRY_DAYS: int = 7
     ARTIST_EXPIRY_DAYS: int = 7
 
-    # It is assumed that fastAPI will be launched either from the root directory of the project or from the ./backend
     model_config = SettingsConfigDict(
-        case_sensitive=True,
-        env_file=".env" if path.exists(".env") else "./backend/.env",
+        env_file=path.join(path.dirname(path.abspath(__file__)), "..", ".env"),
+        extra="ignore",
     )
 
 
@@ -64,4 +69,4 @@ class CeleryConfig:
     task_track_started = True
 
 
-settings = Settings()
+settings = Settings()  # type: ignore
