@@ -26,17 +26,15 @@ from src.analysis.schemas import (
     SAnalysisBase,
     SAnalysisUpdate,
 )
-from src.repository import BaseRepository, with_session_management
+from src.repository import BaseRepository
 
 
 # TODO: find way to avoid code duplication (lazy rn)
 
+
 # NOTE:
 # IDK how it will work with planned in the future dashboard.
 # Most likely repo will be rewritten during admin dashboard development
-
-
-@with_session_management
 class TrackFeaturesRepository(BaseRepository):
     async def get(self, track_id: str) -> STrackFeaturesBase | None:
         query = (
@@ -63,7 +61,6 @@ class TrackFeaturesRepository(BaseRepository):
         return STrackFeaturesBase.model_validate(features_model, from_attributes=True)
 
 
-@with_session_management
 class ArtistsRepository(BaseRepository):
     async def get(self, artist_id: str) -> SArtist | None:
         query = (
@@ -140,7 +137,6 @@ class ArtistsRepository(BaseRepository):
         return STrack.model_validate(track_model, from_attributes=True)
 
 
-@with_session_management
 class TrackRepository(BaseRepository):
     async def get(self, track_id: str) -> STrack | None:
         query = (
@@ -239,7 +235,6 @@ class TrackRepository(BaseRepository):
         return track_model.expires_at < datetime.utcnow()
 
 
-@with_session_management
 class PlaylistRepository(BaseRepository):
     async def get(self, playlist_id: str) -> SPlaylist | None:
         query = (
@@ -299,7 +294,6 @@ class PlaylistRepository(BaseRepository):
         return SPlaylistVersion.model_validate(version_model, from_attributes=True)
 
 
-@with_session_management
 class PlaylistVersionRepository(BaseRepository):
     async def get(self, snapshot_id: str) -> SPlaylistVersion | None:
         query = (
@@ -366,7 +360,6 @@ class PlaylistVersionRepository(BaseRepository):
         )
 
 
-@with_session_management
 class AnalysisRepository(BaseRepository):
     async def get(
         self, version_id: UUID = None, task_id: UUID = None
