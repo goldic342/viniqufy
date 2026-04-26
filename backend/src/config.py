@@ -53,9 +53,9 @@ class CeleryConfig:
     accept_content = ["application/json", "application/x-python-serialize"]
     result_accept_content = ["application/json", "application/x-python-serialize"]
 
-    imports = ("src.analysis.tasks",)
+    imports = ("analysis.tasks",)
 
-    task_annotations = {"src.analysis.tasks": {"rate_limit": "100/m"}}
+    task_annotations = {"analysis.tasks": {"rate_limit": "100/m"}}
 
     # Celery 6.0+ specific configuration
     broker_connection_retry_on_startup = True

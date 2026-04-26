@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 
-from src.analysis.models import (
+from analysis.models import (
     Track,
     TrackFeatures,
     Artist,
@@ -12,7 +12,7 @@ from src.analysis.models import (
     PlaylistVersion,
     Analysis,
 )
-from src.analysis.schemas import (
+from analysis.schemas import (
     STrack,
     STrackBase,
     SArtist,
@@ -26,7 +26,7 @@ from src.analysis.schemas import (
     SAnalysisBase,
     SAnalysisUpdate,
 )
-from src.repository import BaseRepository
+from repository import BaseRepository
 
 
 # TODO: find way to avoid code duplication (lazy rn)

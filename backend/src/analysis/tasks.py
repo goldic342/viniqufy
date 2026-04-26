@@ -1,9 +1,9 @@
 from asyncio import get_event_loop
 from uuid import UUID
 
-from src.analysis.schemas import SPlaylistCreate
-from src.analysis.service import AnalysisService
-from src.tasks import celery
+from analysis.schemas import SPlaylistCreate
+from analysis.service import AnalysisService
+from tasks import celery
 from celery import Task
 
 

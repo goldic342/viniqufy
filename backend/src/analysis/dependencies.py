@@ -1,7 +1,7 @@
 from celery.result import AsyncResult
 
-from src.analysis.exceptions import InvalidTaskId
-from src.analysis.utils import is_valid_base64, decode_uuid
+from analysis.exceptions import InvalidTaskId
+from analysis.utils import is_valid_base64, decode_uuid
 
 
 async def get_analysis_task(task_id: str) -> AsyncResult:

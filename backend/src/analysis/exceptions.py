@@ -1,4 +1,4 @@
-from src.exceptions import CustomHTTPException, TaskException
+from exceptions import CustomHTTPException, TaskException
 
 
 class InvalidSpotifyId(CustomHTTPException):

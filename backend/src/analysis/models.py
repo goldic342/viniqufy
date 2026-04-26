@@ -14,10 +14,10 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import mapped_column, Mapped, validates, relationship, declared_attr
 
-from src.analysis.enums import AnalysisStatus
-from src.analysis.utils import validate_popularity
-from src.config import settings
-from src.database import Base
+from analysis.enums import AnalysisStatus
+from analysis.utils import validate_popularity
+from config import settings
+from database import Base
 
 
 class BaseTable(Base):

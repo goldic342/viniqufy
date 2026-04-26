@@ -4,8 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from src.analysis.enums import AnalysisStatus
-from src.models import TaskResult, TaskInit
+from analysis.enums import AnalysisStatus
+from models import TaskResult, TaskInit
 
 
 class SPlaylistCreate(BaseModel):

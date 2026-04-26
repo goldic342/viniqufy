@@ -8,9 +8,9 @@ from aiohttp import ClientSession
 
 import math
 
-from src.analysis.config import analysis_settings
-from src.analysis.enums import AnalysisStatus
-from src.analysis.repository import (
+from analysis.config import analysis_settings
+from analysis.enums import AnalysisStatus
+from analysis.repository import (
     playlists,
     playlist_versions,
     tracks,
@@ -18,7 +18,7 @@ from src.analysis.repository import (
     track_features,
     analyzes,
 )
-from src.analysis.schemas import (
+from analysis.schemas import (
     SPlaylistCreate,
     SArtist,
     STrackFeatures,
@@ -33,8 +33,8 @@ from src.analysis.schemas import (
     SAnalysisUpdate,
     SPlaylistBase,
 )
-from src.config import settings
-from src.exceptions import CustomHTTPException
+from config import settings
+from exceptions import CustomHTTPException
 
 
 class AnalysisService:

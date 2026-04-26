@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends
 
-from src.analysis.dependencies import get_analysis_task
-from src.analysis.exceptions import InvalidSpotifyId
-from src.analysis.schemas import AnalysisTaskInit, AnalysisTaskResult, SPlaylistCreate
-from src.analysis.service import AnalysisService
-from src.analysis.tasks import analyse_playlist
-from src.analysis.utils import encode_uuid
-from src.analysis.utils import validate_spotify_id
-from src.exceptions import TaskNotCompleted
-from src.models import TaskStatus
+from analysis.dependencies import get_analysis_task
+from analysis.exceptions import InvalidSpotifyId
+from analysis.schemas import AnalysisTaskInit, AnalysisTaskResult, SPlaylistCreate
+from analysis.service import AnalysisService
+from analysis.tasks import analyse_playlist
+from analysis.utils import encode_uuid
+from analysis.utils import validate_spotify_id
+from exceptions import TaskNotCompleted
+from models import TaskStatus
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
