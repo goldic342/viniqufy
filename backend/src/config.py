@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     DATABASE_PASSWORD: str
     DATABASE_PORT: int
     DATABASE_NAME: str
-    ASYNC_DATABASE_URI: PostgresDsn | str = ""
+    DATABASE_URI: PostgresDsn | str = ""
 
     @field_validator("ASYNC_DATABASE_URI", mode="after")
     def assemble_db_connection(cls, v: str | None, info: FieldValidationInfo) -> Any:
