@@ -37,12 +37,15 @@ class Settings(BaseSettings):
     ARTIST_EXPIRY_DAYS: int = 7
 
     # It is assumed that fastAPI will be launched either from the root directory of the project or from the ./backend
-    model_config = SettingsConfigDict(case_sensitive=True, env_file=".env" if path.exists(".env") else './backend/.env')
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=".env" if path.exists(".env") else "./backend/.env",
+    )
 
 
 class CeleryConfig:
-    broker_url = 'redis://localhost:6379'
-    result_backend = 'redis://localhost:6379/0'
+    broker_url = "redis://localhost:6379"
+    result_backend = "redis://localhost:6379/0"
 
     # Pydantic schemas support
     task_serializer = "pickle"
@@ -50,11 +53,9 @@ class CeleryConfig:
     accept_content = ["application/json", "application/x-python-serialize"]
     result_accept_content = ["application/json", "application/x-python-serialize"]
 
-    imports = ('src.analysis.tasks',)
+    imports = ("src.analysis.tasks",)
 
-    task_annotations = {
-        'src.analysis.tasks': {'rate_limit': '100/m'}
-    }
+    task_annotations = {"src.analysis.tasks": {"rate_limit": "100/m"}}
 
     # Celery 6.0+ specific configuration
     broker_connection_retry_on_startup = True

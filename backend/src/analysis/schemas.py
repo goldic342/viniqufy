@@ -76,25 +76,25 @@ class SArtistBase(BaseModel):
 
 
 class SArtist(SArtistBase):
-    tracks: list['STrackBase'] = []
+    tracks: list["STrackBase"] = []
 
 
 class STrackFeatures(STrackFeaturesBase):
-    track: 'STrackBase'
+    track: "STrackBase"
 
 
 class STrack(STrackBase):
     track_features: Optional[STrackFeaturesBase] = None
     artists: list[SArtistBase] = []
-    playlist_versions: list['SPlaylistVersionBase'] = []
+    playlist_versions: list["SPlaylistVersionBase"] = []
 
 
 class SAnalysis(SAnalysisBase):
-    playlist_version: 'SPlaylistVersionBase'
+    playlist_version: "SPlaylistVersionBase"
 
 
 class SPlaylistVersion(SPlaylistVersionBase):
-    playlist: 'SPlaylistBase'
+    playlist: "SPlaylistBase"
     analysis: Optional[SAnalysisBase] = None
     tracks: list[STrackBase] = []
 
@@ -107,6 +107,7 @@ class SPlaylistInfo(BaseModel):
     """
     SPlaylistInfo used in fronted as playlist info. Not recommended to use as a model for operations
     """
+
     image_url: str
     spotify_playlist_id: str
     snapshot_id: str
@@ -118,8 +119,12 @@ class SPlaylistInfo(BaseModel):
     tracks_count: int
 
     @classmethod
-    def from_base_and_version(cls, base: SPlaylistBase | SPlaylist, version: SPlaylistVersionBase,
-                              image_url: str) -> 'SPlaylistInfo':
+    def from_base_and_version(
+        cls,
+        base: SPlaylistBase | SPlaylist,
+        version: SPlaylistVersionBase,
+        image_url: str,
+    ) -> "SPlaylistInfo":
         combined_dict = {**base.dict(), **version.dict(), "image_url": image_url}
 
         # Creating new instance
@@ -138,4 +143,4 @@ class AnalysisTaskResult(TaskResult):
 
 
 class AnalysisTaskInit(TaskInit):
-    info: 'SPlaylistInfo'
+    info: "SPlaylistInfo"

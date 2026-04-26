@@ -12,7 +12,7 @@ app.include_router(router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:5173'],
+    allow_origins=["http://localhost:5173"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -20,10 +20,5 @@ app.add_middleware(
 app.add_middleware(
     SQLAlchemyMiddleware,
     db_url=str(settings.ASYNC_DATABASE_URI),
-    engine_args={
-        "echo": settings.DEBUG_MODE,
-        'pool_size': 5,
-        "max_overflow": 10
-    }
+    engine_args={"echo": settings.DEBUG_MODE, "pool_size": 5, "max_overflow": 10},
 )
-

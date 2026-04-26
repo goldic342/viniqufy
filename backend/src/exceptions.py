@@ -4,15 +4,19 @@ from fastapi import HTTPException
 class CustomHTTPException(HTTPException):
     """Base class for all custom HTTP exceptions."""
 
-    def __init__(self, detail: str, status_code: int = 400, error_code='INTERNAL_ERROR'):
-        super().__init__(status_code=status_code, detail={
-            'message': detail,
-            'error_code': error_code
-        })
+    def __init__(
+        self, detail: str, status_code: int = 400, error_code="INTERNAL_ERROR"
+    ):
+        super().__init__(
+            status_code=status_code,
+            detail={"message": detail, "error_code": error_code},
+        )
         self.error_code = error_code
 
     def __str__(self):
-        return f"Error: {self.detail} (HTTP {self.status_code}, Code: {self.error_code})"
+        return (
+            f"Error: {self.detail} (HTTP {self.status_code}, Code: {self.error_code})"
+        )
 
     def to_dict(self):
         return {
@@ -25,8 +29,18 @@ class CustomHTTPException(HTTPException):
 class TaskException(CustomHTTPException):
     """Base class for all celery task exceptions."""
 
-    def __init__(self, task_id: str, detail: str = "Task error", status_code: int = 500, error_code: str = 'INTERNAL'):
-        super().__init__(detail=detail, status_code=status_code, error_code=f"TASK_{error_code}_ERROR")
+    def __init__(
+        self,
+        task_id: str,
+        detail: str = "Task error",
+        status_code: int = 500,
+        error_code: str = "INTERNAL",
+    ):
+        super().__init__(
+            detail=detail,
+            status_code=status_code,
+            error_code=f"TASK_{error_code}_ERROR",
+        )
         self.task_id = task_id  # Celery task id
 
     def __str__(self) -> str:
@@ -36,7 +50,7 @@ class TaskException(CustomHTTPException):
 class TaskNotCompleted(TaskException):
     def __init__(self, task_id: str):
         detail = "Task not completed yet"
-        super().__init__(task_id, detail, error_code='NOT_COMPLETED', status_code=400)
+        super().__init__(task_id, detail, error_code="NOT_COMPLETED", status_code=400)
 
 
 # NOTE: In celery vanilla there is no implementation of `not found task`,
@@ -46,4 +60,4 @@ class TaskNotCompleted(TaskException):
 class TaskNotFound(TaskException):
     def __init__(self, task_id: str):
         detail = "Task not found"
-        super().__init__(task_id, detail, error_code='NOT_FOUND', status_code=404)
+        super().__init__(task_id, detail, error_code="NOT_FOUND", status_code=404)

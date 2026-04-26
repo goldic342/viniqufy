@@ -42,7 +42,7 @@ def with_session_management(cls):
 
     for name, method in inspect.getmembers(cls, inspect.iscoroutinefunction):
         # For methods that don't need sqlalchemy session
-        if not name.startswith('__'):
+        if not name.startswith("__"):
             setattr(cls, name, wrap_method(method))
 
     return cls
@@ -56,9 +56,10 @@ class BaseRepository:
 
     @property
     def session(self) -> AsyncSession:
-        if not hasattr(self, '_session') or self._session is None:
+        if not hasattr(self, "_session") or self._session is None:
             raise RuntimeError(
-                "Session is not initialized. This should not happen if using the @with_session_management decorator.")
+                "Session is not initialized. This should not happen if using the @with_session_management decorator."
+            )
         return self._session
 
     async def get(self, *args, **kwargs):

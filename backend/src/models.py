@@ -8,7 +8,7 @@ class Task(BaseModel):
 
 
 class TaskStatus(Task):
-    status: Literal['PENDING', 'FAILED', 'SUCCESS', 'REVOKED', 'STARTED']
+    status: Literal["PENDING", "FAILED", "SUCCESS", "REVOKED", "STARTED"]
 
 
 class TaskResult(Task):
@@ -20,4 +20,5 @@ class TaskInit(Task):
     Represents a task with additional initialization data.
     Use this class when you need to provide supplementary information during task initialization
     """
+
     info: Any

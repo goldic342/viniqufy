@@ -4,9 +4,28 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 
-from src.analysis.models import Track, TrackFeatures, Artist, Playlist, PlaylistVersion, Analysis
-from src.analysis.schemas import STrack, STrackBase, SArtist, SArtistBase, SPlaylist, SPlaylistBase, \
-    SPlaylistVersion, SPlaylistVersionBase, STrackFeaturesBase, SAnalysis, SAnalysisBase, SAnalysisUpdate
+from src.analysis.models import (
+    Track,
+    TrackFeatures,
+    Artist,
+    Playlist,
+    PlaylistVersion,
+    Analysis,
+)
+from src.analysis.schemas import (
+    STrack,
+    STrackBase,
+    SArtist,
+    SArtistBase,
+    SPlaylist,
+    SPlaylistBase,
+    SPlaylistVersion,
+    SPlaylistVersionBase,
+    STrackFeaturesBase,
+    SAnalysis,
+    SAnalysisBase,
+    SAnalysisUpdate,
+)
 from src.repository import BaseRepository, with_session_management
 
 
@@ -15,6 +34,7 @@ from src.repository import BaseRepository, with_session_management
 # NOTE:
 # IDK how it will work with planned in the future dashboard.
 # Most likely repo will be rewritten during admin dashboard development
+
 
 @with_session_management
 class TrackFeaturesRepository(BaseRepository):
@@ -45,7 +65,6 @@ class TrackFeaturesRepository(BaseRepository):
 
 @with_session_management
 class ArtistsRepository(BaseRepository):
-
     async def get(self, artist_id: str) -> SArtist | None:
         query = (
             select(Artist)
@@ -123,14 +142,14 @@ class ArtistsRepository(BaseRepository):
 
 @with_session_management
 class TrackRepository(BaseRepository):
-
     async def get(self, track_id: str) -> STrack | None:
         query = (
             select(Track)
             .options(
                 joinedload(Track.track_features),
                 selectinload(Track.playlist_versions),
-                selectinload(Track.artists))
+                selectinload(Track.artists),
+            )
             .where(Track.track_id == track_id)
         )
 
@@ -166,7 +185,9 @@ class TrackRepository(BaseRepository):
         await self.session.commit()
         return STrack.model_validate(track_model, from_attributes=True)
 
-    async def set_features(self, track_id: str, features: STrackFeaturesBase) -> STrackBase | None:
+    async def set_features(
+        self, track_id: str, features: STrackFeaturesBase
+    ) -> STrackBase | None:
         track_model = await self.session.get(Track, track_id)
 
         if not track_model:
@@ -177,7 +198,9 @@ class TrackRepository(BaseRepository):
         await self.session.commit()
         return STrackBase.model_validate(track_model, from_attributes=True)
 
-    async def link_artist(self, input_artist: SArtistBase, track_id: str) -> None | STrackBase:
+    async def link_artist(
+        self, input_artist: SArtistBase, track_id: str
+    ) -> None | STrackBase:
         """
         Linking existing artist to track
         :param input_artist: Schema of artist
@@ -218,7 +241,6 @@ class TrackRepository(BaseRepository):
 
 @with_session_management
 class PlaylistRepository(BaseRepository):
-
     async def get(self, playlist_id: str) -> SPlaylist | None:
         query = (
             select(Playlist)
@@ -261,7 +283,9 @@ class PlaylistRepository(BaseRepository):
         await self.session.commit()
         return SPlaylistBase.model_validate(playlist_model, from_attributes=True)
 
-    async def add_version(self, playlist_id: str, version_input: SPlaylistVersion) -> SPlaylistVersion | None:
+    async def add_version(
+        self, playlist_id: str, version_input: SPlaylistVersion
+    ) -> SPlaylistVersion | None:
         playlist_model = await self.session.get(Playlist, playlist_id)
 
         if not playlist_model:
@@ -277,14 +301,13 @@ class PlaylistRepository(BaseRepository):
 
 @with_session_management
 class PlaylistVersionRepository(BaseRepository):
-
     async def get(self, snapshot_id: str) -> SPlaylistVersion | None:
         query = (
             select(PlaylistVersion)
             .options(
                 joinedload(PlaylistVersion.playlist),
                 selectinload(PlaylistVersion.tracks),
-                joinedload(PlaylistVersion.analysis)
+                joinedload(PlaylistVersion.analysis),
             )
             .where(PlaylistVersion.snapshot_id == snapshot_id)
         )
@@ -295,18 +318,26 @@ class PlaylistVersionRepository(BaseRepository):
         if not playlist_version_scalar:
             return None
 
-        return SPlaylistVersion.model_validate(playlist_version_scalar, from_attributes=True)
+        return SPlaylistVersion.model_validate(
+            playlist_version_scalar, from_attributes=True
+        )
 
-    async def create(self, input_playlist_version: SPlaylistVersionBase) -> SPlaylistVersionBase:
+    async def create(
+        self, input_playlist_version: SPlaylistVersionBase
+    ) -> SPlaylistVersionBase:
         playlist_version_model = PlaylistVersion(**input_playlist_version.model_dump())
 
         self.session.add(playlist_version_model)
         await self.session.flush()
         await self.session.commit()
 
-        return SPlaylistVersionBase.model_validate(playlist_version_model, from_attributes=True)
+        return SPlaylistVersionBase.model_validate(
+            playlist_version_model, from_attributes=True
+        )
 
-    async def link_track(self, input_track: STrack | STrackBase, version_id: UUID) -> None | SPlaylistVersionBase:
+    async def link_track(
+        self, input_track: STrack | STrackBase, version_id: UUID
+    ) -> None | SPlaylistVersionBase:
         """
         Linking existing artist to track
         :param input_track: Schema of track
@@ -330,25 +361,27 @@ class PlaylistVersionRepository(BaseRepository):
         await self.session.flush()
         await self.session.commit()
 
-        return SPlaylistVersionBase.model_validate(playlist_version_model, from_attributes=True)
+        return SPlaylistVersionBase.model_validate(
+            playlist_version_model, from_attributes=True
+        )
 
 
 @with_session_management
 class AnalysisRepository(BaseRepository):
-    async def get(self, version_id: UUID = None, task_id: UUID = None) -> SAnalysis | None:
+    async def get(
+        self, version_id: UUID = None, task_id: UUID = None
+    ) -> SAnalysis | None:
 
         if version_id:
             id_query = Analysis.playlist_version_id == version_id
         elif task_id:
             id_query = Analysis.task_id == task_id
         else:
-            raise ValueError('At least one of version_id or task_id must be provided')
+            raise ValueError("At least one of version_id or task_id must be provided")
 
         query = (
             select(Analysis)
-            .options(
-                joinedload(Analysis.playlist_version)
-            )
+            .options(joinedload(Analysis.playlist_version))
             .where(id_query)
         )
         analysis_model = await self.session.execute(query)
@@ -364,15 +397,21 @@ class AnalysisRepository(BaseRepository):
         await self.session.commit()
         return SAnalysisBase.model_validate(analysis_model, from_attributes=True)
 
-    async def update(self, analysis_id: UUID, update_data: SAnalysisUpdate) -> SAnalysis | None:
-        query = select(Analysis).options(joinedload(Analysis.playlist_version)).where(Analysis.id == analysis_id)
+    async def update(
+        self, analysis_id: UUID, update_data: SAnalysisUpdate
+    ) -> SAnalysis | None:
+        query = (
+            select(Analysis)
+            .options(joinedload(Analysis.playlist_version))
+            .where(Analysis.id == analysis_id)
+        )
         result = await self.session.execute(query)
         analysis_model = result.scalar_one_or_none()
 
         if not analysis_model:
             return None
 
-        updatable_fields = {'status', 'uniqueness'}
+        updatable_fields = {"status", "uniqueness"}
 
         for key, value in update_data.model_dump(exclude_unset=True).items():
             if key in updatable_fields:
